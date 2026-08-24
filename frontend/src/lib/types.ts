@@ -116,6 +116,12 @@ export interface MentorResponse {
   sources: { type: string; id: string }[];
 }
 
+export interface MentorHistoryItem {
+  role: "user" | "assistant";
+  message: string;
+  sources: { type: string; id: string }[];
+}
+
 export interface SimulateResponse {
   current: Record<string, number>;
   simulated: Record<string, number>;

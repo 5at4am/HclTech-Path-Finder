@@ -208,6 +208,12 @@ class MentorResponse(BaseModel):
     sources: list[dict[str, Any]] = []
 
 
+class MentorHistoryItem(BaseModel):
+    role: str  # user | assistant
+    message: str
+    sources: list[dict[str, Any]] = []
+
+
 # ---------- Dashboard ----------
 class DashboardResponse(BaseModel):
     learner_id: str

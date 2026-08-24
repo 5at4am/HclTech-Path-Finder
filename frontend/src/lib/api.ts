@@ -75,6 +75,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ learner_id, message }),
     }),
+  mentorHistory: (learner_id: string) =>
+    request<import("./types").MentorHistoryItem[]>(
+      `/api/mentor/history/${learner_id}`
+    ),
   simulate: (learner_id: string, changes: Record<string, unknown>) =>
     request<import("./types").SimulateResponse>("/api/paths/simulate", {
       method: "POST",
