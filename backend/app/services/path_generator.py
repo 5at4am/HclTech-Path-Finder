@@ -150,39 +150,41 @@ def _ensure_capstone(selected: list[Resource], resources: list[Resource], scores
 
 
 def _order_for_path(resources: list[Resource], model_scores: dict[str, float]) -> list[Resource]:
-    """Present foundational courses first, then more advanced ones."""
-    return sorted(
-        resources,
-        key=lambda r: (DIFF_ORDER.get(r.difficulty, 1), -model_scores.get(r.id, 0.0)),
-    )
+    """Prerequisite-valid ordering that still prefers foundational courses first.
 
+    Kahn's algorithm with a priority heap: among all currently unlocked
+    resources, the easiest/highest-scoring one goes next, so beginners see
+    foundations first WITHOUT ever placing a resource before its prerequisite.
+    """
+    import heapq
 
-
-def _topo_sort(resources: list[Resource]) -> list[Resource]:
     by_id = {r.id: r for r in resources}
     indeg = {r.id: 0 for r in resources}
-    adj = defaultdict(list)
+    adj: dict[str, list[str]] = defaultdict(list)
     for r in resources:
         for pre in r.prerequisites or []:
             if pre in by_id:
                 adj[pre].append(r.id)
                 indeg[r.id] += 1
-    from collections import deque
-    q = deque([rid for rid, d in indeg.items() if d == 0])
-    order = []
-    while q:
-        rid = q.popleft()
-        order.append(rid)
+
+    def _key(rid: str) -> tuple:
+        r = by_id[rid]
+        return (DIFF_ORDER.get(r.difficulty, 1), -model_scores.get(rid, 0.0), rid)
+
+    heap = [_key(rid) for rid, d in indeg.items() if d == 0]
+    heapq.heapify(heap)
+    out: list[Resource] = []
+    while heap:
+        _, _, rid = heapq.heappop(heap)
+        out.append(by_id[rid])
         for nxt in adj[rid]:
             indeg[nxt] -= 1
             if indeg[nxt] == 0:
-                q.append(nxt)
-    # append any remaining (cycle safety)
-    seen = set(order)
-    for r in resources:
-        if r.id not in seen:
-            order.append(r.id)
-    return [by_id[i] for i in order]
+                heapq.heappush(heap, _key(nxt))
+    # cycle safety: append anything unreachable
+    seen = {r.id for r in out}
+    out.extend(r for r in resources if r.id not in seen)
+    return out
 
 
 def _is_completed(r: Resource, learner: Learner) -> bool:
@@ -231,13 +233,16 @@ def generate(db: Session, learner_id: str) -> PathGenerateResponse | None:
     ordered = _order_for_path(included, scores)
 
     completed_set = set()
+    catalog_ids = {r.id for r in resources}
     steps: list[LearningStep] = []
     order_idx = 0
     current_assigned = False
     phases_seen = set()
     for r in ordered:
         is_completed = _is_completed(r, learner)
-        prereqs = r.prerequisites or []
+        # only prerequisites that exist as real resources can gate a step;
+        # dangling ids (stale seed data) must not lock it forever
+        prereqs = [p for p in (r.prerequisites or []) if p in catalog_ids]
         prereqs_satisfied = all(p in completed_set for p in prereqs)
         if is_completed:
             status = "completed"
