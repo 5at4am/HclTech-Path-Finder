@@ -55,6 +55,25 @@ def _resource_out(r: Resource) -> ResourceOut:
     )
 
 
+def build_unlocks(path_resource_ids: list[str], resources: list[Resource]) -> dict[str, list[str]]:
+    """Reverse prerequisite map scoped to a path.
+
+    Returns {resource_id: [titles of resources in the path that directly
+    depend on it]} so every step can answer "what will this unlock?".
+    """
+    in_path = set(path_resource_ids)
+    unlocks: dict[str, list[str]] = {rid: [] for rid in path_resource_ids}
+    seen: dict[str, set[str]] = {}
+    for r in resources:
+        if r.id not in in_path:
+            continue
+        for pre in r.prerequisites or []:
+            if pre in in_path and r.title not in seen.get(pre, set()):
+                seen.setdefault(pre, set()).add(r.title)
+                unlocks[pre].append(r.title)
+    return unlocks
+
+
 def _build_profile_text(learner: Learner) -> str:
     """Text the ML model matches the learner's goal against the course corpus."""
     parts = [learner.goal or "", learner.target_role or ""]
@@ -211,13 +230,6 @@ def generate(db: Session, learner_id: str) -> PathGenerateResponse | None:
     included = _ensure_capstone(included, resources, scores)
     ordered = _order_for_path(included, scores)
 
-    # dependency map for unlocks
-    dependents: dict[str, list[str]] = defaultdict(list)
-    by_id = {r.id: r for r in resources}
-    for r in resources:
-        for pre in r.prerequisites or []:
-            dependents[pre].append(r.id)
-
     completed_set = set()
     steps: list[LearningStep] = []
     order_idx = 0
@@ -283,6 +295,8 @@ def generate(db: Session, learner_id: str) -> PathGenerateResponse | None:
         db.add(s)
     db.commit()
 
+    by_id = {r.id: r for r in resources}
+    unlocks_map = build_unlocks([s.resource_id for s in steps], resources)
     step_outs = [
         LearningStepOut(
             id=s.id, resource_id=s.resource_id, order=s.order, phase=s.phase,
@@ -291,7 +305,7 @@ def generate(db: Session, learner_id: str) -> PathGenerateResponse | None:
             recommendation_score=float(s.recommendation_score), reason=s.reason,
             prerequisites=s.prerequisites or [], skills_gained=s.skills_gained or [],
             resource=_resource_out(by_id[s.resource_id]),
-            unlocks=[d for d in dependents.get(s.resource_id, []) if d in {x.resource_id for x in steps}],
+            unlocks=unlocks_map.get(s.resource_id, []),
         )
         for s in steps
     ]

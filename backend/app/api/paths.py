@@ -41,10 +41,13 @@ def get_path(path_id: str, db: Session = Depends(get_db)):
     )
     by_id = {r.id: r for r in db.query(Resource).all()}
     from ..schemas import LearningStepOut, ResourceOut
+    from ..services.path_generator import build_unlocks
     from ..services.skill_gap_service import compute_gaps
     from ..models import Learner
     learner = db.get(Learner, path.learner_id)
     _, coverage = compute_gaps(learner) if learner else ([], 0)
+
+    unlocks_map = build_unlocks([s.resource_id for s in steps], list(by_id.values()))
 
     step_outs = [
         LearningStepOut(
@@ -59,7 +62,7 @@ def get_path(path_id: str, db: Session = Depends(get_db)):
                 description=r.description, skills_gained=r.skills_gained or [],
                 prerequisites=r.prerequisites or [], phase=r.phase, optional=bool(r.optional),
                 rating=float(r.rating or 0.0)),
-            unlocks=[],
+            unlocks=unlocks_map.get(s.resource_id, []),
         )
         for s, r in ((s, by_id[s.resource_id]) for s in steps)
     ]

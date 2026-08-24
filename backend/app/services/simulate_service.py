@@ -12,6 +12,7 @@ from .path_generator import (
     _order_for_path,
     _is_completed,
     _reason,
+    build_unlocks,
 )
 from .skill_gap_service import compute_gaps
 
@@ -64,6 +65,7 @@ def simulate(db: Session, learner_id: str, changes: dict) -> SimulateResponse | 
     profile_text = _build_profile_text(sim_like)
     model_scores = model.score(profile_text)
     ordered = _order_for_path(_select_for_goal(resources, model_scores), model_scores)
+    unlocks_map = build_unlocks([r.id for r in ordered], resources)
 
     completed_set = set()
     steps_out = []
@@ -96,7 +98,7 @@ def simulate(db: Session, learner_id: str, changes: dict) -> SimulateResponse | 
                 description=r.description, skills_gained=r.skills_gained or [],
                 prerequisites=r.prerequisites or [], phase=r.phase, optional=bool(r.optional),
                 rating=float(r.rating or 0.0)),
-            unlocks=[],
+            unlocks=unlocks_map.get(r.id, []),
         ))
         if is_comp:
             completed_set.add(r.id)
