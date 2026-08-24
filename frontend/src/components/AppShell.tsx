@@ -1,0 +1,115 @@
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  LayoutDashboard, Route, Radar, BookOpen, FolderGit2, Sparkles,
+  Menu, X, Compass,
+} from "lucide-react";
+import { useApp } from "../lib/store";
+import { api } from "../lib/api";
+import { cx } from "./ui";
+
+const NAV = [
+  { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { to: "/path", label: "My Path", icon: Route },
+  { to: "/skills", label: "Skills", icon: Radar },
+  { to: "/courses", label: "Courses", icon: BookOpen },
+  { to: "/projects", label: "Projects", icon: FolderGit2 },
+  { to: "/mentor", label: "AI Mentor", icon: Sparkles },
+];
+
+export default function AppShell() {
+  const { learnerId } = useApp();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [greeting, setGreeting] = useState<string>("");
+
+  useEffect(() => {
+    const h = new Date().getHours();
+    setGreeting(h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening");
+    if (learnerId) {
+      api.dashboard(learnerId).then((d) => {
+        // greeting handled below; just ensure path exists
+      }).catch(() => {});
+    }
+  }, [learnerId]);
+
+  return (
+    <div className="app-bg min-h-screen md:flex">
+      {/* Sidebar (desktop) */}
+      <aside className="hidden w-60 shrink-0 border-r border-border bg-surface/60 px-4 py-6 md:block">
+        <div className="mb-8 flex items-center gap-2 px-2">
+          <span className="grid h-8 w-8 place-items-center rounded-btn bg-accent text-white">
+            <Compass size={18} />
+          </span>
+          <span className="text-lg font-bold tracking-tight">Pathwise</span>
+        </div>
+        <nav className="flex flex-col gap-1">
+          {NAV.map((n) => (
+            <NavLink key={n.to} to={n.to} className={({ isActive }) => cx("nav-link", isActive && "nav-link-active")}>
+              <n.icon size={18} />
+              {n.label}
+            </NavLink>
+          ))}
+        </nav>
+        <div className="mt-8 border-t border-border pt-4">
+          <p className="px-3 text-[11px] leading-relaxed text-muted">
+            Your goal. Your path. Your pace.
+          </p>
+        </div>
+      </aside>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="fixed inset-0 z-40 md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
+            <motion.aside
+              className="absolute left-0 top-0 h-full w-64 border-r border-border bg-surface p-4"
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: "tween", duration: 0.25 }}
+            >
+              <div className="mb-6 flex items-center justify-between">
+                <span className="text-lg font-bold">Pathwise</span>
+                <button onClick={() => setOpen(false)} aria-label="Close menu"><X size={20} /></button>
+              </div>
+              <nav className="flex flex-col gap-1">
+                {NAV.map((n) => (
+                  <NavLink key={n.to} to={n.to} onClick={() => setOpen(false)} className={({ isActive }) => cx("nav-link", isActive && "nav-link-active")}>
+                    <n.icon size={18} /> {n.label}
+                  </NavLink>
+                ))}
+              </nav>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-bg/80 px-4 py-3 backdrop-blur md:px-8">
+          <div className="flex items-center gap-3">
+            <button className="md:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><Menu size={20} /></button>
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-muted">{greeting}</p>
+              <h1 className="text-sm font-semibold text-primary">Your learning home</h1>
+            </div>
+          </div>
+          <button onClick={() => navigate("/mentor")} className="btn-subtle">
+            <Sparkles size={16} /> Ask Pathwise
+          </button>
+        </header>
+
+        <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}

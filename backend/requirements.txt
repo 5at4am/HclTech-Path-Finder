@@ -1,0 +1,11 @@
+fastapi==0.135.3
+uvicorn[standard]==0.34.0
+pydantic==2.12.5
+SQLAlchemy
+python-dotenv
+httpx
+scikit-learn
+pandas
+numpy
+langchain-groq
+groq==0.13.0
