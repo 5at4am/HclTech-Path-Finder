@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..models import Learner
 from ..schemas import ProfileCreate, ProfileResponse
+from .skill_gap_service import normalize_current_skills
 
 
 def _to_response(learner: Learner) -> ProfileResponse:
@@ -31,13 +32,15 @@ def _to_response(learner: Learner) -> ProfileResponse:
 
 def create_profile(db: Session, data: ProfileCreate) -> ProfileResponse:
     lid = data.learner_id or f"learner_{uuid.uuid4().hex[:8]}"
+    payload = data.model_dump(exclude={"learner_id"})
+    payload["current_skills"] = normalize_current_skills(payload.get("current_skills"))
     existing = db.get(Learner, lid)
     if existing:
-        for k, v in data.model_dump(exclude={"learner_id"}).items():
+        for k, v in payload.items():
             setattr(existing, k, v)
         learner = existing
     else:
-        learner = Learner(id=lid, **data.model_dump(exclude={"learner_id"}))
+        learner = Learner(id=lid, **payload)
         db.add(learner)
     db.commit()
     db.refresh(learner)

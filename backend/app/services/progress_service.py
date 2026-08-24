@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from ..models import Learner, LearningPath, LearningStep, Progress, Resource
 from ..schemas import ProgressResponse
-from .skill_gap_service import required_for
+from .skill_gap_service import normalize_current_skills, required_for
 
 
 def _learner_path(db: Session, learner_id: str):
@@ -74,7 +74,7 @@ def update_progress(
     learner.learning_history = list(set(learner.learning_history or []) | {resource_id})
 
     # skill growth
-    cur = dict(learner.current_skills or {})
+    cur = normalize_current_skills(learner.current_skills)
     for sk in resource.skills_gained or []:
         gain = int(85 * completion_percentage / 100)
         cur[sk] = max(int(cur.get(sk, 0)), gain)

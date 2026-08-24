@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..models import Feedback, Learner, LearningPath, LearningStep, Progress, Resource, Skill
 from ..schemas import DashboardResponse
-from .skill_gap_service import compute_gaps, required_for
+from .skill_gap_service import compute_gaps, normalize_current_skills, required_for
 
 
 def _streak(db: Session, learner_id: str) -> int:
@@ -48,7 +48,7 @@ def build_dashboard(db: Session, learner_id: str) -> DashboardResponse | None:
     path_complete_pct = round(100 * done / total)
 
     required = required_for(learner.target_role, learner.goal)
-    cur = learner.current_skills or {}
+    cur = normalize_current_skills(learner.current_skills)
     covered = sum(1 for sk, req in required.items() if int(cur.get(sk, 0)) >= req * 0.6)
     skills_covered = f"{covered}/{len(required)}"
 

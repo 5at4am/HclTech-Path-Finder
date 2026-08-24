@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import re
+
 from sqlalchemy.orm import Session
 
 from ..models import Learner, Resource, Skill
 from ..schemas import ProfileAnalysisResponse, ProfileResponse, SkillGapItem
+from ..seed import SKILLS as _SKILL_ROWS
 # Required skill levels (0-100) per target role. Each role only lists the
 # skills that actually belong to that domain, so a Frontend path no longer
 # requires machine learning.
@@ -68,6 +71,37 @@ GENERIC = {
     "data_analysis": 50, "statistics": 45, "deployment": 40, "portfolio": 60,
 }
 
+# Canonical skill-id lookup so free-form inputs ("Python", "Machine Learning",
+# "machine learning") all resolve to ontology ids like python/machine_learning.
+_SLUG = re.compile(r"[^a-z0-9]+")
+_SKILL_KEY_TO_ID: dict[str, str] = {}
+for _sid, _name, _dom in _SKILL_ROWS:
+    _SKILL_KEY_TO_ID[_name.lower()] = _sid
+    _SKILL_KEY_TO_ID.setdefault(_SLUG.sub("_", _sid.lower()).strip("_"), _sid)
+    _SKILL_KEY_TO_ID.setdefault(_SLUG.sub("_", _name.lower()).strip("_"), _sid)
+
+
+def normalize_current_skills(raw: dict | None) -> dict[str, int]:
+    """Map arbitrary skill keys to canonical ontology ids.
+
+    Profiles receive current_skills from Groq goal parsing and the UI, which use
+    display names ("Python", "REST API") while gap analysis and dashboards key
+    by ontology id ("python", "rest_api"). Without normalization every lookup
+    silently misses and coverage reads 0%.
+    """
+    out: dict[str, int] = {}
+    for k, v in (raw or {}).items():
+        try:
+            lvl = max(0, min(100, int(v)))
+        except (TypeError, ValueError):
+            continue
+        key = str(k).strip().lower()
+        sid = _SKILL_KEY_TO_ID.get(key) or _SKILL_KEY_TO_ID.get(_SLUG.sub("_", key).strip("_"))
+        if sid is None:
+            sid = _SLUG.sub("_", key).strip("_")
+        out[sid] = max(out.get(sid, 0), lvl)
+    return out
+
 
 def required_for(role: str, goal: str) -> dict[str, int]:
     if role in ROLE_REQUIREMENTS:
@@ -97,7 +131,7 @@ def required_for(role: str, goal: str) -> dict[str, int]:
 
 def compute_gaps(learner: Learner) -> tuple[list[SkillGapItem], int]:
     required = required_for(learner.target_role, learner.goal)
-    current = learner.current_skills or {}
+    current = normalize_current_skills(learner.current_skills)
     gaps: list[SkillGapItem] = []
     covered = 0
     for skill, req_level in required.items():

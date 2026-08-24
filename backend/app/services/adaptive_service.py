@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from ..models import Feedback, Learner, Resource
+from .skill_gap_service import normalize_current_skills
 
 
 def apply_feedback(
@@ -23,7 +24,7 @@ def apply_feedback(
     if helpful:
         adaptation = f"Thanks — \"{resource.title if resource else resource_id}\" will stay prioritized in your path."
     else:
-        cur = dict(learner.current_skills or {})
+        cur = normalize_current_skills(learner.current_skills)
         completed = set(learner.completed_courses or [])
         interests = list(learner.interests or [])
         if reason == "too_difficult":
