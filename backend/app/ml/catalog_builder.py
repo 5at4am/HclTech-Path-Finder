@@ -193,12 +193,17 @@ def get_catalog_resources() -> list[dict]:
 
     The result is cached on disk keyed by the source CSV's size+mtime, so
     server startups after the first one skip the multi-minute CSV parse.
+    When the source CSV is not shipped (lean checkouts), the committed
+    cache is authoritative and no rebuild is attempted.
     """
-    stat = DATA_FILE.stat()
-    key = {"size": stat.st_size, "mtime": int(stat.st_mtime)}
+    try:
+        stat = DATA_FILE.stat()
+        key = {"size": stat.st_size, "mtime": int(stat.st_mtime)}
+    except OSError:
+        key = None
     try:
         raw = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
-        if raw.get("source") == key:
+        if key is None or raw.get("source") == key:
             return raw["catalog"]
     except (OSError, ValueError, KeyError, TypeError):
         pass
