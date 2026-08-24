@@ -25,3 +25,10 @@ dist/
 # OS / editor
 Thumbs.db
 .DS_Store
+
+# Local docs / reference material — keep out of the repo
+skill/
+design.md
+DESIGN_INSTRUCTION.md
+instruction.md
+memory.md
