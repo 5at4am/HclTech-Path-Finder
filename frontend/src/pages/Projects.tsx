@@ -5,7 +5,7 @@ import { FolderGit2, Loader2 } from "lucide-react";
 import { api } from "../lib/api";
 import { useApp } from "../lib/store";
 import { ResourceCard } from "../components/ResourceCard";
-import { EmptyState } from "../components/ui";
+import { EmptyState, ErrorState } from "../components/ui";
 
 export default function Projects() {
   const { learnerId } = useApp();
@@ -13,7 +13,7 @@ export default function Projects() {
   const qc = useQueryClient();
   useEffect(() => { if (!learnerId) navigate("/onboarding"); }, [learnerId, navigate]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["recommendations", learnerId],
     queryFn: () => api.recommendations(learnerId!),
     enabled: !!learnerId,
@@ -30,6 +30,13 @@ export default function Projects() {
   });
 
   if (!learnerId) return null;
+  if (isError) return (
+    <ErrorState
+      title="We couldn't load your projects."
+      body="Make sure the backend is running on port 8000, then try again."
+      action={<button onClick={() => refetch()} className="btn-primary">Retry</button>}
+    />
+  );
   if (isLoading || !data) return <div className="py-20 text-center text-muted"><Loader2 className="mx-auto animate-spin text-accent" /></div>;
 
   const projects = data.recommendations.filter((r) => r.resource.type === "project");

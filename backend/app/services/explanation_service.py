@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from ..models import Learner, LearningPath, LearningStep, Resource
 from ..schemas import MentorResponse
-from .groq_service import SYSTEM_HEURISTIC, groq_chat, groq_available
+from .groq_service import SYSTEM_MENTOR, groq_chat, groq_available, prose_or_json
 from .skill_gap_service import compute_gaps
 
 
@@ -55,7 +55,7 @@ async def explain_step(db: Session, path_id: str, step_id: str) -> MentorRespons
             f"{structured}\n"
             "Do not invent facts."
         )
-        message = await groq_chat(SYSTEM_HEURISTIC, prompt, temperature=0.3, max_tokens=1200)
+        message = prose_or_json(await groq_chat(SYSTEM_MENTOR, prompt, temperature=0.3, max_tokens=1200))
 
     if not message:
         named = ", ".join(a.replace("_", " ").title() for a in addressed[:3]) or (resource.domain if resource else step.resource_id)

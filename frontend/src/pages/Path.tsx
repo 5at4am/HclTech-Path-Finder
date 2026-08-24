@@ -6,7 +6,7 @@ import { api } from "../lib/api";
 import { useApp } from "../lib/store";
 import type { LearningStepOut, MentorResponse, PathOut, SimulateResponse } from "../lib/types";
 import LearningPath from "../components/LearningPath";
-import { StatusBadge, cx } from "../components/ui";
+import { StatusBadge, cx, ErrorState } from "../components/ui";
 
 export default function Path() {
   const { learnerId, pathId } = useApp();
@@ -19,6 +19,7 @@ export default function Path() {
   const [explainLoad, setExplainLoad] = useState(false);
   const [showSim, setShowSim] = useState(false);
   const [startLoad, setStartLoad] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   const phases = useMemo(() => {
     if (!path) return [];
@@ -40,7 +41,7 @@ export default function Path() {
         setLoading(false);
       }
     })();
-  }, [learnerId, pathId, navigate]);
+  }, [learnerId, pathId, navigate, retryKey]);
 
   async function openStep(step: LearningStepOut) {
     setSelected(step);
@@ -76,7 +77,15 @@ export default function Path() {
   }
 
   if (loading) return <div className="app-bg grid min-h-screen place-items-center"><Loader2 className="animate-spin text-accent" /></div>;
-  if (error) return <div className="app-bg grid min-h-screen place-items-center text-error px-6 text-center">{error}</div>;
+  if (error) return (
+    <div className="app-bg grid min-h-screen place-items-center px-6">
+      <ErrorState
+        title="We couldn't load your learning path."
+        body={error}
+        action={<button onClick={() => setRetryKey((k) => k + 1)} className="btn-primary">Retry</button>}
+      />
+    </div>
+  );
   if (!path) return null;
 
   return (

@@ -5,19 +5,26 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } fro
 import { ArrowRight } from "lucide-react";
 import { api } from "../lib/api";
 import { useApp } from "../lib/store";
-import { SkillBar } from "../components/ui";
+import { SkillBar, ErrorState } from "../components/ui";
 
 export default function Skills() {
   const { learnerId } = useApp();
   const navigate = useNavigate();
   useEffect(() => { if (!learnerId) navigate("/onboarding"); }, [learnerId, navigate]);
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["dashboard", learnerId, "skills"],
     queryFn: () => api.dashboard(learnerId!),
     enabled: !!learnerId,
   });
 
   if (!learnerId) return null;
+  if (isError) return (
+    <ErrorState
+      title="We couldn't load your skills."
+      body="Make sure the backend is running on port 8000, then try again."
+      action={<button onClick={() => refetch()} className="btn-primary">Retry</button>}
+    />
+  );
   if (isLoading || !data) return <div className="py-20 text-center text-muted">Loading skills…</div>;
 
   const skills = data.skills;

@@ -14,9 +14,32 @@ SYSTEM_HEURISTIC = (
     "natural-language goal into structured fields. Always answer with strict JSON."
 )
 
+SYSTEM_MENTOR = (
+    "You are Pathwise, a friendly AI learning mentor. Answer in clear natural "
+    "language only — never raw JSON, code fences, or markup. Ground every answer "
+    "in the learner context you are given and never invent courses, skills, or progress."
+)
+
 
 def groq_available() -> bool:
     return bool(GROQ_API_KEY)
+
+
+def prose_or_json(text: Optional[str]) -> Optional[str]:
+    """Unwrap accidental JSON wrappers around free-text answers.
+
+    Some models occasionally obey the strict-JSON goal-parsing system prompt even
+    when asked for prose, replying {"explanation": "..."} . If the payload is a
+    small dict holding exactly one substantial string, return that string.
+    """
+    if not text:
+        return text
+    data = extract_json(text)
+    if isinstance(data, dict) and data:
+        strings = [v for v in data.values() if isinstance(v, str) and len(v.strip()) > 40]
+        if len(strings) == 1 and len(data) <= 3:
+            return strings[0].strip()
+    return text
 
 
 async def groq_chat(system: str, user: str, temperature: float = 0.2, max_tokens: int = 1500) -> Optional[str]:

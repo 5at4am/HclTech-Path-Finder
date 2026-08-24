@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from ..models import Conversation, Learner, LearningPath, LearningStep, Resource
 from ..schemas import MentorResponse
-from .groq_service import SYSTEM_HEURISTIC, groq_chat, groq_available
+from .groq_service import SYSTEM_MENTOR, groq_chat, groq_available, prose_or_json
 from .skill_gap_service import compute_gaps
 from .profile_service import _to_response
 
@@ -129,7 +129,7 @@ async def mentor_chat(db: Session, learner_id: str, message: str) -> MentorRespo
             "Do not invent courses, skills, or progress. If the answer isn't in the context, say so. "
             "Be concise and friendly.\n\nQuestion: " + message
         )
-        reply = await groq_chat(SYSTEM_HEURISTIC, prompt, temperature=0.3, max_tokens=500)
+        reply = prose_or_json(await groq_chat(SYSTEM_MENTOR, prompt, temperature=0.3, max_tokens=500))
 
     if not reply:
         reply, src = _rule_based(db, learner, message, ctx_steps)

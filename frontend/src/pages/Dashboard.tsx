@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Flame, Clock, Target, TrendingUp, ListChecks } from "lucide-react";
 import { api } from "../lib/api";
 import { useApp } from "../lib/store";
-import { SkillBar, cx } from "../components/ui";
+import { SkillBar, cx, ErrorState } from "../components/ui";
 import type { DashboardResponse } from "../lib/types";
 
 export default function Dashboard() {
@@ -13,13 +13,20 @@ export default function Dashboard() {
   const navigate = useNavigate();
   useEffect(() => { if (!learnerId) navigate("/onboarding"); }, [learnerId, navigate]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["dashboard", learnerId],
     queryFn: () => api.dashboard(learnerId!),
     enabled: !!learnerId,
   });
 
   if (!learnerId) return null;
+  if (isError) return (
+    <ErrorState
+      title="We couldn't load your dashboard."
+      body="Make sure the backend is running on port 8000, then try again."
+      action={<button onClick={() => refetch()} className="btn-primary">Retry</button>}
+    />
+  );
   if (isLoading || !data) return <div className="py-20 text-center text-muted">Loading your dashboard…</div>;
 
   const d = data as DashboardResponse;

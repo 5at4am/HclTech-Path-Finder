@@ -5,7 +5,7 @@ import { BookOpen, Loader2 } from "lucide-react";
 import { api } from "../lib/api";
 import { useApp } from "../lib/store";
 import { ResourceCard } from "../components/ResourceCard";
-import { EmptyState } from "../components/ui";
+import { EmptyState, ErrorState } from "../components/ui";
 
 type Tab = "recommended" | "courses" | "projects" | "saved";
 
@@ -18,7 +18,7 @@ export default function Courses() {
 
   useEffect(() => { if (!learnerId) navigate("/onboarding"); }, [learnerId, navigate]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["recommendations", learnerId],
     queryFn: () => api.recommendations(learnerId!),
     enabled: !!learnerId,
@@ -45,6 +45,13 @@ export default function Courses() {
   });
 
   if (!learnerId) return null;
+  if (isError) return (
+    <ErrorState
+      title="We couldn't load your recommendations."
+      body="Make sure the backend is running on port 8000, then try again."
+      action={<button onClick={() => refetch()} className="btn-primary">Retry</button>}
+    />
+  );
   if (isLoading || !data) return <div className="py-20 text-center text-muted"><Loader2 className="mx-auto animate-spin text-accent" /></div>;
 
   const recs = data.recommendations;
