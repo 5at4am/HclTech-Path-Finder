@@ -1,0 +1,30 @@
+﻿services:
+  # Astrolabe API (FastAPI). Create the service from this blueprint and set the
+  # secret GROQ_API_KEY in the Render dashboard (never commit it).
+  - type: web
+    name: astrolabe-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.4
+      - key: GROQ_API_KEY
+        sync: false            # set manually in the dashboard (secret)
+      - key: GROQ_MODEL
+        value: qwen/qwen3.6-27b
+      # Point these at your real Vercel URL(s) after the first deploy.
+      - key: FRONTEND_URL
+        value: https://your-frontend.vercel.app
+      - key: CORS_ORIGINS
+        value: https://your-frontend.vercel.app
+      # NOTE: SQLite lives on Render's ephemeral disk on the free tier —
+      # seeded data is rebuilt on every deploy/restart (fine for a demo).
+      # For durable data, upgrade to a persistent disk or swap DATABASE_URL
+      # for Postgres, e.g. postgresql+psycopg://user:pass@host/db
+      - key: DATABASE_URL
+        value: sqlite:///astrolabe.db
