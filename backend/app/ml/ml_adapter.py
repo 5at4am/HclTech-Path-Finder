@@ -1,7 +1,7 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 """
-ML adapter for Pathwise.
+ML adapter for Astrolabe.
 
 This isolates the rest of the backend from the existing ML model in
 ``Model/solution.py``. The original ``solution.py`` is a TF-IDF +

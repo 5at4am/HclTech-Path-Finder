@@ -152,14 +152,30 @@ class ResourceOut(BaseModel):
     rating: float = 0.0
 
 
+class Evidence(BaseModel):
+    """Grounded proof behind a "why", sourced from real course reviews.
+
+    Never fabricated by the LLM: every field traces to the Evidence Engine
+    (``app.ml.evidence_engine``) which mines distinctive review sentences.
+    """
+
+    course_signatures: list[str] = []
+    matched_signatures: list[str] = []
+    similarity: float = 0.0
+    peer_courses: list[str] = []
+    source: str = "evidence_engine"
+
+
 class RecommendationOut(BaseModel):
     resource: ResourceOut
+    evidence: Evidence | None = None
     model_relevance: float = 0.0
     skill_gap_match: float = 0.0
     interest_match: float = 0.0
     prerequisite_fit: float = 0.0
     difficulty_fit: float = 0.0
     time_fit: float = 0.0
+    evidence_score: float = 0.0
     match_score: float = 0.0
     reason: str = ""
 
@@ -185,6 +201,7 @@ class LearningStepOut(BaseModel):
     skills_gained: list[str] = []
     resource: ResourceOut
     unlocks: list[str] = []
+    evidence: Evidence | None = None
 
 
 class PathGenerateRequest(BaseModel):
@@ -283,6 +300,7 @@ class MentorRequest(BaseModel):
 class MentorResponse(BaseModel):
     message: str
     sources: list[dict[str, Any]] = []
+    evidence: Evidence | None = None
 
 
 class MentorHistoryItem(BaseModel):

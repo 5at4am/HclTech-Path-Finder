@@ -3,17 +3,27 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from ..models import Learner, LearningPath, LearningStep, Resource
-from ..schemas import MentorResponse
+from ..schemas import Evidence, MentorResponse
+from ..ml import evidence_engine as ee
 from .groq_service import SYSTEM_MENTOR, groq_chat, groq_available, prose_or_json
 from .skill_gap_service import compute_gaps
+from .path_generator import _build_profile_text
 
 
-def _evidence(resource: Resource | None, k: int = 2) -> list[str]:
-    """Pull short, real learner-review snippets from the resource description."""
-    if not resource or not resource.description:
-        return []
-    parts = [p.strip().rstrip(".") for p in resource.description.split(". ") if 20 <= len(p.strip()) <= 180]
-    return parts[:k]
+def _sanitize(message: str, allowed: set[str]) -> str:
+    """Defensively strip any course name the evidence did not authorise.
+
+    The LLM is instructed not to invent facts, but we enforce it: any course
+    name from the known catalog that is not in ``allowed`` is redacted. This is
+    what makes the "why" always trace to real evidence.
+    """
+    eng = ee.get_engine()
+    if eng is None:
+        return message
+    for name in eng["course_names"]:
+        if name and name not in allowed and name.lower() in message.lower():
+            message = message.replace(name, "[another course]")
+    return message
 
 
 async def explain_step(db: Session, path_id: str, step_id: str) -> MentorResponse | None:
@@ -33,45 +43,63 @@ async def explain_step(db: Session, path_id: str, step_id: str) -> MentorRespons
         covered = sum(1 for p in step.prerequisites if p in completed)
         prereq_coverage = round(100 * covered / len(step.prerequisites))
 
-    dependents = (
-        db.query(LearningStep)
-        .filter(LearningStep.path_id == path_id)
-        .all()
-    )
+    dependents = db.query(LearningStep).filter(LearningStep.path_id == path_id).all()
     unlocks = [d.resource_id for d in dependents if step.resource_id in (d.prerequisites or [])]
 
-    structured = (
-        f"Skill gap addressed: {', '.join(addressed) or 'general progression'}.\n"
-        f"Prerequisite coverage: {prereq_coverage}%.\n"
-        f"Unlocks: {', '.join(unlocks) or 'final goal'}."
+    profile_text = _build_profile_text(learner) if learner else (resource.title if resource else "")
+    evidence: Evidence = (
+        ee.explain(profile_text, resource.title, k=4) if resource else Evidence()
     )
+
+    named = (
+        ", ".join(a.replace("_", " ").title() for a in addressed[:3])
+        or (resource.domain if resource else step.resource_id)
+    )
+    peer_txt = ", ".join(evidence.peer_courses[:3])
+    sig = evidence.course_signatures
+
+    # The strict, fact-only brief the LLM is allowed to rephrase.
+    brief = (
+        f"Course: {resource.title if resource else step.resource_id}\n"
+        f"Why learners take it (real reviews): {'; '.join(sig[:3]) or 'n/a'}\n"
+        f"Similar courses learners also explored: {peer_txt or 'n/a'}\n"
+        f"Skill gap addressed: {', '.join(addressed) or 'general progression'}\n"
+        f"Prerequisite coverage: {prereq_coverage}%\n"
+        f"Unlocks: {', '.join(unlocks) or 'final goal'}\n"
+    )
+
+    allowed = {resource.title if resource else step.resource_id} | set(evidence.peer_courses)
 
     message = None
     if groq_available():
         prompt = (
-            "Explain in 2-3 friendly sentences why this learning step is recommended next. "
-            "Use ONLY these facts:\n"
-            f"Step: {resource.title if resource else step.resource_id}\n"
-            f"{structured}\n"
-            "Do not invent facts."
+            "Rephrase the following brief into 2-3 friendly sentences explaining why this "
+            "step is recommended next. You MUST use ONLY the facts given. Keep the course "
+            "name and the learner-review phrases verbatim. Do NOT introduce any other course "
+            "or skill name that is not already in the brief.\n\n"
+            f"{brief}"
         )
-        message = prose_or_json(await groq_chat(SYSTEM_MENTOR, prompt, temperature=0.3, max_tokens=1200))
+        raw = prose_or_json(await groq_chat(SYSTEM_MENTOR, prompt, temperature=0.2, max_tokens=600))
+        if raw:
+            message = _sanitize(raw, allowed)
 
     if not message:
-        named = ", ".join(a.replace("_", " ").title() for a in addressed[:3]) or (resource.domain if resource else step.resource_id)
         message = (
-            f"\"{resource.title if resource else step.resource_id}\" is next because it closes your gap in "
-            f"{named}. {prereq_coverage}% of its prerequisites are already met, and finishing it unlocks "
-            f"{', '.join(unlocks) or 'your goal'}."
+            f"\"{resource.title if resource else step.resource_id}\" is next on your path. "
         )
-
-    # Append real learner-review evidence so the rationale is grounded in data.
-    quotes = _evidence(resource)
-    if quotes:
-        message += "\n\nWhat learners say:\n" + "\n".join(f"“{q}.”" for q in quotes)
+        if sig:
+            message += f"Learners describe it as: {sig[0]} "
+        message += f"It closes your gap in {named}."
+        if peer_txt:
+            message += f" Learners who took it also explored {peer_txt}."
+        if prereq_coverage < 100:
+            message += f" ({prereq_coverage}% of prerequisites already met.)"
 
     return MentorResponse(
         message=message,
-        sources=[{"type": "path_step", "id": step.id}]
-        + [{"type": "learner_review", "resource_id": resource.id} for _ in quotes],
+        sources=[
+            {"type": "path_step", "id": step.id},
+            {"type": "evidence", "resource_id": resource.id if resource else None},
+        ],
+        evidence=evidence,
     )

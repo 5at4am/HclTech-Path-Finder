@@ -10,6 +10,7 @@ from ..schemas import (
     ResourceOut,
 )
 from ..ml.ml_adapter import get_model
+from ..ml import evidence_engine as ee
 from .path_generator import GOAL_EXPANSION
 
 DIFF = {"beginner": 1, "intermediate": 2, "advanced": 3}
@@ -96,15 +97,22 @@ def recommend(db: Session, learner_id: str, limit: int = 14) -> RecommendationsR
             r, learner, gaps_set, interests_set, completed_set, model_scores, profile_text
         )
         reason = _build_reason(r, sgm, gaps_set, pf)
+        evidence = ee.explain(profile_text, r.title, k=4)
+        evidence_score = round(evidence.similarity, 3)
+        # Evidence Engine drives the Courses-tab match score; selection stays
+        # deterministic (handled by path_generator).
+        blended = round(0.6 * evidence_score + 0.4 * match, 3)
         scored.append(RecommendationOut(
             resource=_resource_out(r),
+            evidence=evidence,
             model_relevance=round(mr, 3),
             skill_gap_match=round(sgm, 3),
             interest_match=round(im, 3),
             prerequisite_fit=round(pf, 3),
             difficulty_fit=round(df, 3),
             time_fit=round(tf, 3),
-            match_score=match,
+            evidence_score=evidence_score,
+            match_score=blended,
             reason=reason,
         ))
     # rank: gap-addressing first, then match score
