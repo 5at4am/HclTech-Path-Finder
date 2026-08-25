@@ -1,7 +1,7 @@
-[project]
+﻿[project]
 name = "backend"
 version = "0.1.0"
-description = "Pathwise backend — personalized learning-path API (FastAPI + ML course matcher + Groq)."
+description = "Astrolabe backend — personalized learning-path API (FastAPI + ML course matcher + Groq)."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import logging
 import time
@@ -19,7 +19,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
-logger = logging.getLogger("pathwise")
+logger = logging.getLogger("astrolabe")
 
 
 def _startup():
@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Pathwise API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Astrolabe API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -110,4 +110,4 @@ def health(db=Depends(get_db)):
 
 @app.get("/")
 def root():
-    return {"name": "Pathwise API", "docs": "/docs"}
+    return {"name": "Astrolabe API", "docs": "/docs"}

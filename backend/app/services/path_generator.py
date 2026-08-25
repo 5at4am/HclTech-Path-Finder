@@ -12,6 +12,7 @@ from ..schemas import (
 )
 from .skill_gap_service import compute_gaps
 from ..ml.ml_adapter import get_model
+from ..ml import evidence_engine as ee
 from .profile_service import _to_response
 
 DIFF = {"beginner": 1, "intermediate": 2, "advanced": 3}
@@ -42,6 +43,37 @@ GOAL_EXPANSION = {
     "blockchain": "blockchain smart contract solidity web3 crypto",
     "iot": "iot embedded raspberry pi sensors",
     "statistics": "statistics probability hypothesis bayesian",
+}
+
+# Maps each goal-expansion key to the catalog domains it implies, so a goal can
+# be anchored to a track. "Frontend Developer" -> Frontend, etc. Used by
+# _target_domains to keep generated paths on-topic instead of drifting.
+GOAL_EXPANSION_DOMAIN: dict[str, set[str]] = {
+    "frontend": {"Frontend"},
+    "front-end": {"Frontend"},
+    "backend": {"Backend"},
+    "back-end": {"Backend"},
+    "full stack": {"Frontend", "Backend", "Full Stack"},
+    "mobile": {"Mobile"},
+    "web": {"Frontend"},
+    "data scien": {"Data Science"},
+    "data analy": {"Data Analysis"},
+    "machine learning": {"Machine Learning"},
+    "deep learning": {"Deep Learning"},
+    "generative": {"Generative AI"},
+    "genai": {"Generative AI"},
+    "ai/ml": {"Machine Learning", "Deep Learning", "Generative AI"},
+    "ai engineer": {"Machine Learning", "Deep Learning", "Generative AI"},
+    "ml engineer": {"Machine Learning", "Deep Learning", "Generative AI"},
+    "nlp": {"NLP"},
+    "computer vision": {"Computer Vision"},
+    "cloud": {"Cloud"},
+    "devops": {"DevOps"},
+    "security": {"Security"},
+    "database": {"Databases"},
+    "blockchain": {"Blockchain"},
+    "iot": {"Systems"},
+    "statistics": {"Statistics"},
 }
 
 
@@ -93,48 +125,51 @@ def _build_profile_text(learner: Learner) -> str:
     return text
 
 
-def _gap_boost(r: Resource, gap_terms: set[str]) -> float:
-    """1.0 when a course's domain/title/skills match one of the learner's priority gaps."""
-    if not gap_terms:
-        return 0.0
-    hay = (r.domain + " " + r.title + " " + " ".join(r.skills_gained or [])).lower()
-    for t in gap_terms:
-        if t.replace("_", " ") in hay:
-            return 1.0
-    return 0.0
+def _target_domains(learner: Learner) -> set[str]:
+    """Map a learner's goal/role/interests to the catalog domains it targets."""
+    text = _build_profile_text(learner)
+    domains: set[str] = set()
+    for key, doms in GOAL_EXPANSION_DOMAIN.items():
+        if key in text:
+            domains |= doms
+    return domains
 
 
-def _select_for_goal(resources: list[Resource], model_scores: dict[str, float], top_k: int = 16) -> list[Resource]:
-    """Rank courses by model relevance to the learner's goal.
+def _select_for_goal(
+    resources: list[Resource],
+    target_domains: set[str] | None = None,
+    top_k: int = 14,
+) -> list[Resource]:
+    """Select the resources for a learner's path — deterministically.
 
-    Uses the TF-IDF + cosine similarity model from Model/solution.py (via
-    ml_adapter) so a "Frontend" goal returns frontend courses, not ML ones.
-    Prerequisites of selected courses are pulled in so advanced courses aren't
-    left permanently "locked".
+    The ML model is NOT the selector. We choose by explicit catalog structure so
+    the path is correct for every domain: in-domain resources first (or the whole
+    catalog when the goal maps to no specific domain), then genuine prerequisites
+    pulled in from any domain. Ordering is left to _order_for_path (topological +
+    difficulty). The model still drives the "Match %"/reason text elsewhere, but it
+    no longer decides *which* courses belong on the path — that's what previously
+    let blockchain/Python/Flask leak into a Frontend plan.
     """
-    ranked = sorted(resources, key=lambda r: model_scores.get(r.id, 0.0), reverse=True)
-    positive = [r for r in ranked if model_scores.get(r.id, 0.0) > 0]
-    if len(positive) >= 4:
-        picks = positive[:top_k]
-    else:
-        picks = ranked[:top_k]
+    in_domain = (
+        [r for r in resources if r.domain in target_domains]
+        if target_domains else list(resources)
+    )
+    picks = {r.id for r in in_domain[:top_k]}
 
     by_id = {r.id: r for r in resources}
-    selected = set(p.id for p in picks)
     changed = True
     while changed:
         changed = False
-        for rid in list(selected):
+        for rid in list(picks):
             for pre in by_id[rid].prerequisites or []:
-                if pre in by_id and pre not in selected:
-                    selected.add(pre)
+                if pre in by_id and pre not in picks:
+                    picks.add(pre)
                     changed = True
-    picks = [by_id[i] for i in selected]
-    picks.sort(key=lambda r: model_scores.get(r.id, 0.0), reverse=True)
-    return picks
+    # Stable, readable order: easier courses first, then by title.
+    return sorted((by_id[i] for i in picks), key=lambda r: (DIFF_ORDER.get(r.difficulty, 1), r.title))
 
 
-def _ensure_capstone(selected: list[Resource], resources: list[Resource], scores: dict[str, float]) -> list[Resource]:
+def _ensure_capstone(selected: list[Resource], resources: list[Resource], scores: dict[str, float] | None = None) -> list[Resource]:
     """Append a portfolio project for the dominant domain if none is present."""
     if any(r.type == "project" for r in selected) or not selected:
         return selected
@@ -145,16 +180,18 @@ def _ensure_capstone(selected: list[Resource], resources: list[Resource], scores
         cands = [r for r in resources if r.type == "project"]
     if not cands:
         return selected
-    cands.sort(key=lambda r: scores.get(r.id, 0.0), reverse=True)
+    if scores:
+        cands.sort(key=lambda r: scores.get(r.id, 0.0), reverse=True)
     return selected + [cands[0]]
 
 
-def _order_for_path(resources: list[Resource], model_scores: dict[str, float]) -> list[Resource]:
+def _order_for_path(resources: list[Resource]) -> list[Resource]:
     """Prerequisite-valid ordering that still prefers foundational courses first.
 
     Kahn's algorithm with a priority heap: among all currently unlocked
-    resources, the easiest/highest-scoring one goes next, so beginners see
-    foundations first WITHOUT ever placing a resource before its prerequisite.
+    resources, the easiest one goes next, so beginners see foundations first
+    WITHOUT ever placing a resource before its prerequisite. Deterministic and
+    model-free — order depends only on the catalog's difficulty + prerequisite DAG.
     """
     import heapq
 
@@ -169,13 +206,13 @@ def _order_for_path(resources: list[Resource], model_scores: dict[str, float]) -
 
     def _key(rid: str) -> tuple:
         r = by_id[rid]
-        return (DIFF_ORDER.get(r.difficulty, 1), -model_scores.get(rid, 0.0), rid)
+        return (DIFF_ORDER.get(r.difficulty, 1), rid)
 
     heap = [_key(rid) for rid, d in indeg.items() if d == 0]
     heapq.heapify(heap)
     out: list[Resource] = []
     while heap:
-        _, _, rid = heapq.heappop(heap)
+        _, rid = heapq.heappop(heap)
         out.append(by_id[rid])
         for nxt in adj[rid]:
             indeg[nxt] -= 1
@@ -213,28 +250,23 @@ def generate(db: Session, learner_id: str) -> PathGenerateResponse | None:
     if not learner:
         return None
     resources = db.query(Resource).all()
-    gaps, coverage = compute_gaps(learner)
+    _, coverage = compute_gaps(learner)
 
-    # Rank courses for this learner's goal using the ML model.
+    # The ML model is used for *display* (Match %, reason wording) only — not for
+    # selecting which courses belong on the path. Selection is deterministic.
     model = get_model(resources)
     profile_text = _build_profile_text(learner)
     model_scores = model.score(profile_text)
+    target_domains = _target_domains(learner)
 
-    # Blend the model's goal relevance with the learner's priority gaps so that
-    # courses addressing their weakest required skills are surfaced too.
-    gap_terms = {g.skill.lower() for g in gaps}
-    scores = {
-        r.id: 0.75 * model_scores.get(r.id, 0.0) + 0.25 * _gap_boost(r, gap_terms)
-        for r in resources
-    }
-
-    included = _select_for_goal(resources, scores)
-    included = _ensure_capstone(included, resources, scores)
-    ordered = _order_for_path(included, scores)
+    included = _select_for_goal(resources, target_domains)
+    included = _ensure_capstone(included, resources, model_scores)
+    ordered = _order_for_path(included)
 
     completed_set = set()
     catalog_ids = {r.id for r in resources}
     steps: list[LearningStep] = []
+    step_evidence: dict[str, object] = {}
     order_idx = 0
     current_assigned = False
     phases_seen = set()
@@ -273,6 +305,7 @@ def generate(db: Session, learner_id: str) -> PathGenerateResponse | None:
             prerequisites=list(prereqs),
             skills_gained=list(r.skills_gained or []),
         )
+        step_evidence[r.id] = ee.explain(profile_text, r.title, k=4)
         steps.append(step)
         order_idx += 1
         if is_completed:
@@ -311,6 +344,7 @@ def generate(db: Session, learner_id: str) -> PathGenerateResponse | None:
             prerequisites=s.prerequisites or [], skills_gained=s.skills_gained or [],
             resource=_resource_out(by_id[s.resource_id]),
             unlocks=unlocks_map.get(s.resource_id, []),
+            evidence=step_evidence.get(s.resource_id),
         )
         for s in steps
     ]

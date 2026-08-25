@@ -6,12 +6,14 @@ from sqlalchemy.orm import Session
 from ..models import Learner, LearningPath, Resource
 from ..schemas import SimulateResponse
 from ..ml.ml_adapter import get_model
+from ..ml import evidence_engine as ee
 from .path_generator import (
     _build_profile_text,
     _select_for_goal,
     _order_for_path,
     _is_completed,
     _reason,
+    _target_domains,
     build_unlocks,
 )
 from .skill_gap_service import compute_gaps
@@ -20,7 +22,8 @@ from .skill_gap_service import compute_gaps
 def _estimate_months(learner_like, resources, model, weekly) -> tuple[int, int]:
     profile_text = _build_profile_text(learner_like)
     model_scores = model.score(profile_text)
-    ordered = _order_for_path(_select_for_goal(resources, model_scores), model_scores)
+    target_domains = _target_domains(learner_like)
+    ordered = _order_for_path(_select_for_goal(resources, target_domains))
     total = sum(r.duration_hours for r in ordered)
     weeks = total / max(1, weekly)
     return max(1, round(weeks / 4.3)), total
@@ -64,7 +67,8 @@ def simulate(db: Session, learner_id: str, changes: dict) -> SimulateResponse | 
 
     profile_text = _build_profile_text(sim_like)
     model_scores = model.score(profile_text)
-    ordered = _order_for_path(_select_for_goal(resources, model_scores), model_scores)
+    target_domains = _target_domains(sim_like)
+    ordered = _order_for_path(_select_for_goal(resources, target_domains))
     unlocks_map = build_unlocks([r.id for r in ordered], resources)
 
     completed_set = set()
@@ -99,6 +103,7 @@ def simulate(db: Session, learner_id: str, changes: dict) -> SimulateResponse | 
                 prerequisites=r.prerequisites or [], phase=r.phase, optional=bool(r.optional),
                 rating=float(r.rating or 0.0)),
             unlocks=unlocks_map.get(r.id, []),
+            evidence=ee.explain(profile_text, r.title, k=4),
         ))
         if is_comp:
             completed_set.add(r.id)

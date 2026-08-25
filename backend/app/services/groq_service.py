@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import os
@@ -10,12 +10,12 @@ from langchain_groq import ChatGroq
 from ..config import GROQ_API_KEY, GROQ_MODEL
 
 SYSTEM_HEURISTIC = (
-    "You are Pathwise, an AI learning-path assistant. You help parse a learner's "
+    "You are Astrolabe, an AI learning-path assistant. You help parse a learner's "
     "natural-language goal into structured fields. Always answer with strict JSON."
 )
 
 SYSTEM_MENTOR = (
-    "You are Pathwise, a friendly AI learning mentor. Answer in clear natural "
+    "You are Astrolabe, a friendly AI learning mentor. Answer in clear natural "
     "language only — never raw JSON, code fences, or markup. Ground every answer "
     "in the learner context you are given and never invent courses, skills, or progress."
 )

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -19,11 +19,11 @@ def _get_env(key: str, default: str) -> str:
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "qwen/qwen3.6-27b")
-DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{(BACKEND_DIR.parent / 'pathwise.db')}")
+DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{(BACKEND_DIR.parent / 'astrolabe.db')}")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
 # Comma-separated list wins if provided, e.g.
-# CORS_ORIGINS=https://pathwise.vercel.app,https://pathwise-git-main-you.vercel.app
+# CORS_ORIGINS=https://astrolabe.vercel.app,https://astrolabe-git-main-you.vercel.app
 _env_origins = [
     o.strip().rstrip("/")
     for o in os.environ.get("CORS_ORIGINS", "").split(",")
