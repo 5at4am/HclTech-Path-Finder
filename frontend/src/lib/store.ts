@@ -1,4 +1,4 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 import type { GoalAnalysis, ProfileData } from "./types";
 
 interface AppState {
@@ -13,7 +13,7 @@ interface AppState {
   reset: () => void;
 }
 
-const KEY = "pathwise_state_v1";
+const KEY = "astrolabe_state_v1";
 
 function load(): Partial<AppState> {
   try {

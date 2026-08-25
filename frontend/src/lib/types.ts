@@ -56,14 +56,24 @@ export interface ResourceOut {
   rating: number;
 }
 
+export interface Evidence {
+  course_signatures: string[];
+  matched_signatures: string[];
+  similarity: number;
+  peer_courses: string[];
+  source: string;
+}
+
 export interface RecommendationOut {
   resource: ResourceOut;
+  evidence: Evidence | null;
   model_relevance: number;
   skill_gap_match: number;
   interest_match: number;
   prerequisite_fit: number;
   difficulty_fit: number;
   time_fit: number;
+  evidence_score: number;
   match_score: number;
   reason: string;
 }
@@ -83,6 +93,7 @@ export interface LearningStepOut {
   skills_gained: string[];
   resource: ResourceOut;
   unlocks: string[];
+  evidence: Evidence | null;
 }
 
 export interface PathOut {
@@ -114,6 +125,7 @@ export interface FeedbackResponse {
 export interface MentorResponse {
   message: string;
   sources: { type: string; id: string }[];
+  evidence: Evidence | null;
 }
 
 export interface MentorHistoryItem {

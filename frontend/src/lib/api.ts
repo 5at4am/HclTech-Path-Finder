@@ -1,5 +1,5 @@
-// Dev falls back to the local API; production must set VITE_API_BASE
-// (e.g. https://pathwise-api.onrender.com) in the Vercel project env vars.
+﻿// Dev falls back to the local API; production must set VITE_API_BASE
+// (e.g. https://astrolabe-api.onrender.com) in the Vercel project env vars.
 const BASE =
   import.meta.env.VITE_API_BASE ||
   (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");

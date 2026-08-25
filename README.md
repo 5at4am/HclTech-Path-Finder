@@ -1,8 +1,8 @@
-# Pathwise
+﻿# Astrolabe
 
 **Your goal. Your learning path.**
 
-Pathwise is an AI-powered personalized learning-path recommender built for the
+Astrolabe is an AI-powered personalized learning-path recommender built for the
 HCL hackathon. Tell it where you want to go in plain language — it figures out
 where you are, finds your skill gaps, and builds an ordered, prerequisite-aware
 roadmap of courses, projects, and assessments. Every recommendation is
@@ -83,6 +83,26 @@ the browser, never placed in any `VITE_*` variable, and `.env` is gitignored.
 cd backend
 uv run pytest          # offline & deterministic — Groq calls are stubbed
 ```
+
+### Deployment (Vercel + Render)
+
+A `render.yaml` blueprint is included — create a **Blueprint** service on Render
+pointing at this repo and fill in the `GROQ_API_KEY` secret when prompted.
+
+1. **Backend (Render)** — blueprint provisions it from `render.yaml`
+   (`rootDir: backend`, start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`,
+   health check `/api/health`). Note the free tier uses an ephemeral disk, so
+   SQLite data reseeds on each deploy/restart; use Postgres or a persistent
+   disk for durable data.
+2. **Frontend (Vercel)** — import the repo with **Root Directory = `frontend`**,
+   then set the env var:
+
+   ```env
+   VITE_API_BASE=https://astrolabe-api.onrender.com   # your Render URL
+   ```
+
+3. **CORS** — set `FRONTEND_URL` / `CORS_ORIGINS` on Render to your Vercel URL
+   (comma-separated for preview domains), then redeploy.
 
 ## Demo Script (~3 min)
 
