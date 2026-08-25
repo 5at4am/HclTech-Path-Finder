@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Sparkles, X, Loader2, GitCompare, Lock } from "lucide-react";
+import { ArrowRight, Sparkles, X, Loader2, GitCompare, Lock, Compass } from "lucide-react";
 import { api } from "../lib/api";
 import { useApp } from "../lib/store";
 import type { LearningStepOut, MentorResponse, PathOut, SimulateResponse } from "../lib/types";
 import LearningPath from "../components/LearningPath";
-import { StatusBadge, cx, ErrorState } from "../components/ui";
+import { StatusBadge, cx, ErrorState, Skeleton, EvidencePanel } from "../components/ui";
 
 export default function Path() {
   const { learnerId, pathId } = useApp();
@@ -52,7 +52,7 @@ export default function Path() {
         const r = await api.explainStep(path.path_id, step.id);
         setExplain(r);
       } catch {
-        setExplain({ message: step.reason, sources: [] });
+        setExplain({ message: step.reason, sources: [], evidence: null });
       } finally {
         setExplainLoad(false);
       }
@@ -92,7 +92,8 @@ export default function Path() {
     <div className="app-bg min-h-screen">
       <header className="container-page flex items-center justify-between py-5">
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold">Pathwise</span>
+          <span className="grid h-8 w-8 place-items-center rounded-btn bg-route text-white"><Compass size={18} /></span>
+          <span className="font-display text-lg font-bold tracking-tight">Astrolabe</span>
         </div>
         <button onClick={() => navigate("/dashboard")} className="btn-primary">Open dashboard <ArrowRight size={16} /></button>
       </header>
@@ -106,7 +107,7 @@ export default function Path() {
             <span className="text-border">·</span>
             <span>{path.study_time_per_week} hrs/week</span>
             <span className="text-border">·</span>
-            <span className="text-progress">{path.prerequisite_coverage_pct}% of prerequisite skills already covered</span>
+            <span className="text-accent">{path.prerequisite_coverage_pct}% of prerequisite skills already covered</span>
           </div>
 
           <div className="mt-8">
@@ -143,7 +144,7 @@ export default function Path() {
             >
               <button onClick={() => setSelected(null)} className="absolute right-4 top-4 text-muted hover:text-primary"><X size={18} /></button>
               <span className="section-eyebrow">Why is this next?</span>
-              <h2 className="mt-2 text-xl font-bold">{selected.resource.title}</h2>
+              <h2 className="mt-2 font-display text-xl font-bold">{selected.resource.title}</h2>
               <div className="mt-2 flex flex-wrap gap-2">
                 <StatusBadge status={selected.status} />
                 <span className="pill capitalize">{selected.resource.type}</span>
@@ -151,9 +152,22 @@ export default function Path() {
                 <span className="pill">{selected.estimated_hours} hrs</span>
               </div>
 
-              <div className="mt-5 rounded-card border border-border bg-elevated p-4">
-                {explainLoad ? <Loader2 className="animate-spin text-accent" /> : (
-                  <p className="text-sm leading-relaxed text-primary">{explain?.message || selected.reason}</p>
+              <div className="mt-5">
+                {explainLoad ? (
+                  <div className="space-y-2" role="status" aria-label="Generating explanation">
+                    <Skeleton className="h-3.5 w-full" />
+                    <Skeleton className="h-3.5 w-[92%]" />
+                    <Skeleton className="h-3.5 w-[70%]" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm leading-relaxed text-primary">{explain?.message || selected.reason}</p>
+                    {(selected.evidence || explain?.evidence) && (
+                      <div className="mt-4 border-t border-border-subtle pt-4">
+                        <EvidencePanel evidence={selected.evidence ?? explain?.evidence ?? null} />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -211,13 +225,18 @@ function WhatIf({ learnerId, currentStudy, open }: { learnerId: string; currentS
       </div>
       <button onClick={run} disabled={load} className="btn-subtle mt-3 w-full">{load ? "Simulating…" : "Run simulation"}</button>
       {sim && (
-        <div className="mt-3 space-y-2 text-sm">
-          <div className="flex justify-between"><span className="text-muted">Current</span><span className="text-secondary">{sim.current.timeline_months} mo · {sim.current.study_time_per_week} h/wk</span></div>
-          <div className="flex justify-between"><span className="text-accent">Simulated</span><span className="text-accent">{sim.simulated.timeline_months} mo · {sim.simulated.study_time_per_week} h/wk</span></div>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="mt-3 space-y-2 text-sm"
+        >
+          <div className="flex justify-between tabular-nums"><span className="text-muted">Current</span><span className="text-secondary">{sim.current.timeline_months} mo · {sim.current.study_time_per_week} h/wk</span></div>
+          <div className="flex justify-between tabular-nums"><span className="font-medium text-accent">Simulated</span><span className="font-medium text-accent">{sim.simulated.timeline_months} mo · {sim.simulated.study_time_per_week} h/wk</span></div>
           <ul className="mt-2 space-y-1 border-t border-border-subtle pt-2 text-xs text-secondary">
             {sim.changes_summary.map((c, i) => <li key={i}>• {c}</li>)}
           </ul>
-        </div>
+        </motion.div>
       )}
     </div>
   );

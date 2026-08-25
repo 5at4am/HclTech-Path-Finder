@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check, Loader2, Compass } from "lucide-react";
@@ -13,6 +13,40 @@ const STAGES = [
   "Ranking learning resources",
   "Building your learning path",
 ];
+
+/* Miniature of the landing hero's route line — fills as pipeline stages complete,
+   keeping one visual motif from marketing site through onboarding. */
+function RouteProgress({ total, completed }: { total: number; completed: number }) {
+  return (
+    <svg viewBox="0 0 320 24" className="my-6 w-full" aria-hidden>
+      <defs>
+        <linearGradient id="analyzingRoute" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor="var(--color-brand-active)" />
+        <stop offset="100%" stopColor="var(--color-brand)" />
+        </linearGradient>
+      </defs>
+       <line x1="10" y1="12" x2="310" y2="12" stroke="#2c2a35" strokeWidth="2" strokeLinecap="round" />
+      <motion.line
+        x1="10" y1="12" x2="310" y2="12"
+        stroke="url(#analyzingRoute)" strokeWidth="2" strokeLinecap="round"
+        initial={false}
+        animate={{ pathLength: total === 0 ? 0 : completed / total }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      />
+      {Array.from({ length: total }).map((_, i) => (
+        <circle
+          key={i}
+          cx={10 + i * (300 / (total - 1))}
+          cy="12"
+          r="4"
+          className={i < completed ? "fill-success" : "fill-elevated"}
+          stroke="#273049"
+          strokeWidth="1"
+        />
+      ))}
+    </svg>
+  );
+}
 
 export default function Analyzing() {
   const navigate = useNavigate();
@@ -52,10 +86,12 @@ export default function Analyzing() {
       <div className="w-full max-w-md px-6">
         <div className="mb-8 flex items-center gap-2">
           <span className="grid h-[32px] w-[32px] place-items-center rounded-btn bg-route text-white"><Compass size={18} /></span>
-          <span className="font-display text-lg font-bold tracking-tight">Pathwise</span>
+          <span className="font-display text-lg font-bold tracking-tight">Astrolabe</span>
         </div>
         <h1 className="font-display text-2xl font-bold tracking-tight">Mapping your route</h1>
         <p className="mt-2 text-secondary">We're turning your goal into a sequenced learning path.</p>
+
+        <RouteProgress total={STAGES.length} completed={done.filter(Boolean).length} />
 
         <ul className="mt-8 space-y-3">
           {STAGES.map((s, i) => (

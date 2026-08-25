@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+﻿import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -24,7 +24,7 @@ function Brand() {
           <span className="grid h-[32px] w-[32px] place-items-center rounded-btn bg-route text-white">
         <Compass size={18} />
       </span>
-      <span className="font-display text-lg font-bold tracking-tight">Pathwise</span>
+      <span className="font-display text-lg font-bold tracking-tight">Astrolabe</span>
     </div>
   );
 }
@@ -113,7 +113,7 @@ export default function AppShell() {
             </div>
           </div>
           <button onClick={() => navigate("/mentor")} className="btn-subtle">
-            <Sparkles size={16} /> Ask Pathwise
+            <Sparkles size={16} /> Ask Astrolabe
           </button>
         </header>
 

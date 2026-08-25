@@ -1,12 +1,44 @@
-import { type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type MouseEvent } from "react";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import type { Evidence } from "../lib/types";
 
 export function cx(...parts: (string | false | null | undefined)[]) {
   return parts.filter(Boolean).join(" ");
 }
 
+/* SpotlightCard — Aceternity/Magic-UI-style cursor spotlight (zero-dep).
+   A radial glow tracks the pointer via CSS custom properties. */
+export function SpotlightCard({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  function onMove(e: MouseEvent<HTMLDivElement>) {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    el.style.setProperty("--my", `${e.clientY - r.top}px`);
+  }
+  return (
+    <div ref={ref} onMouseMove={onMove} className={`spotlight-card ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+/* Number ticker — digits count up to `value` on mount/change (animation-vocabulary:
+   "number ticker"). Render with tabular-nums to keep width stable. */
+export function CountUp({ value }: { value: number }) {
+  const mv = useMotionValue(0);
+  const rounded = useTransform(mv, (v) => Math.round(v).toString());
+  useEffect(() => {
+    const controls = animate(mv, value, { duration: 0.9, ease: [0.21, 0.65, 0.36, 1] });
+    return () => controls.stop();
+  }, [value, mv]);
+  return <motion.span>{rounded}</motion.span>;
+}
+
 const STATUS_STYLES: Record<string, string> = {
   completed: "bg-success/15 text-success border-success/30",
-  current: "bg-accent-soft text-accent border-accent/40",
+  current: "bg-accent-soft text-accent border-accent-soft",
   recommended: "bg-info/10 text-info border-info/25",
   locked: "bg-surface text-muted border-border",
   optional: "bg-warning/10 text-warning border-warning/25",
@@ -21,6 +53,32 @@ export function StatusBadge({ status }: { status: string }) {
   );
 }
 
+/* EvidencePanel — the product's signature element. A teal left rule (not a full
+   border) plus a monospace quote marks "retrieved from data", distinct from
+   narrated prose. The quote is built from real review signatures; the citation
+   below is a single small-caps line. Deliberately quiet: no icons, badges, or
+   extra chrome. Reused identically in the mentor, path detail, and recommendations. */
+export function EvidencePanel({ evidence, className = "" }: { evidence: Evidence | null; className?: string }) {
+  if (!evidence) return null;
+  const { course_signatures, similarity, peer_courses, source } = evidence;
+  if (!course_signatures.length && !peer_courses.length) return null;
+  const citation = [
+    peer_courses.length ? `matched in ${peer_courses.length} learner review${peer_courses.length === 1 ? "" : "s"}` : "from learner reviews",
+    similarity > 0 ? `${Math.round(similarity * 100)}% similarity` : null,
+    source ? source : null,
+  ].filter(Boolean).join(" · ");
+  return (
+    <figure className={cx("border-l-2 border-accent pl-4", className)}>
+      <blockquote className="space-y-1.5 font-mono text-sm leading-relaxed text-primary">
+        {course_signatures.slice(0, 3).map((s, i) => (
+          <span key={i}>{s}</span>
+        ))}
+      </blockquote>
+      <figcaption className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">{citation}</figcaption>
+    </figure>
+  );
+}
+
 export function SkillBar({ label, level, required, gap }: { label: string; level: number; required?: number; gap?: number }) {
   const pct = Math.max(0, Math.min(100, level));
   const reqPct = required ? Math.max(0, Math.min(100, required)) : null;
@@ -31,9 +89,16 @@ export function SkillBar({ label, level, required, gap }: { label: string; level
         <span className="text-xs font-semibold text-secondary tabular-nums">{pct}%</span>
       </div>
       <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-border">
-        <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-accent to-progress transition-all" style={{ width: `${pct}%` }} />
+        <motion.div
+          className="absolute inset-y-0 left-0 rounded-full bg-progress"
+          style={{ width: `${pct}%`, transformOrigin: "left" }}
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.9, ease: [0.21, 0.65, 0.36, 1] }}
+        />
         {reqPct !== null && (
-          <div className="absolute inset-y-0 w-0.5 bg-warning/80" style={{ left: `${reqPct}%` }} title="Required level" />
+          <div className="absolute inset-y-0 w-0.5 bg-signal" style={{ left: `${reqPct}%` }} title="Required level" />
         )}
       </div>
       {gap !== undefined && gap > 0 && (
@@ -98,7 +163,7 @@ export function ErrorState({ title, body, action }: { title: string; body: strin
   );
 }
 
-export function ScoreRing({ value, label, color = "#8B5CF6" }: { value: number; label?: string; color?: string }) {
+export function ScoreRing({ value, label, color = "var(--color-brand)" }: { value: number; label?: string; color?: string }) {
   const r = 16;
   const c = 2 * Math.PI * r;
   const off = c * (1 - Math.max(0, Math.min(1, value)));

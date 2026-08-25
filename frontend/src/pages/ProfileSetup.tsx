@@ -1,9 +1,10 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Compass, Loader2, Pencil, Plus, X } from "lucide-react";
+import { ArrowRight, Check, Compass, Loader2, Pencil, Plus, X } from "lucide-react";
 import { api } from "../lib/api";
 import { useApp } from "../lib/store";
+import { cx } from "../components/ui";
 import type { ProfileData } from "../lib/types";
 
 interface Answer {
@@ -82,9 +83,9 @@ export default function ProfileSetup() {
     const key = QUESTIONS[step].key;
     setAnswers((a) => ({ ...a, [key]: value as any }));
     if (step < QUESTIONS.length - 1) {
-      setTimeout(() => setStep((s) => s + 1), 180);
+      setStep((s) => s + 1);
     } else {
-      setTimeout(() => setShowConfirm(true), 200);
+      setShowConfirm(true);
     }
   }
 
@@ -154,26 +155,51 @@ export default function ProfileSetup() {
     <div className="app-bg flex min-h-screen flex-col">
       <header className="container-page flex items-center gap-2 py-5">
         <span className="grid h-[32px] w-[32px] place-items-center rounded-btn bg-route text-white"><Compass size={18} /></span>
-        <span className="text-lg font-bold">Pathwise</span>
+        <span className="font-display text-lg font-bold tracking-tight">Astrolabe</span>
       </header>
 
-      <main className="container-page flex flex-1 flex-col items-center justify-center py-10">
-        <div className="w-full max-w-xl">
+      <main className="container-page grid flex-1 gap-10 py-10 lg:grid-cols-[1fr_0.85fr] lg:items-start lg:pt-12">
+        <div className="w-full">
           {!showConfirm ? (
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="popLayout">
               <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-                <p className="meta">Question {step + 1} of {QUESTIONS.length}</p>
-                <div className="mt-2 rounded-card border border-border bg-accent-soft/40 px-4 py-3 text-sm text-secondary">
+                {/* route-progress: completed segments turn teal (we now know
+                    this), the active one is violet, upcoming stay hairline. */}
+                <div className="flex items-center gap-1.5" aria-hidden>
+                  {QUESTIONS.map((_, i) => (
+                    <div key={i} className="h-1 flex-1 overflow-hidden rounded-full bg-border">
+                      <motion.div
+                        className={cx("h-full rounded-full", i < step ? "bg-progress" : i === step ? "bg-accent" : "bg-border")}
+                        style={{ width: "100%", transformOrigin: "left" }}
+                        initial={false}
+                        animate={{ scaleX: i < step ? 1 : i === step ? 0.45 : 0 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="meta mt-3">Question {step + 1} of {QUESTIONS.length}</p>
+                <div className="mt-2 rounded-card border border-border bg-accent-soft px-4 py-3 text-sm text-secondary">
                   I understand your goal: <span className="text-primary font-medium">{role}</span>
                   {goalAnalysis?.timeline_months ? ` in ${goalAnalysis.timeline_months} months.` : "."} Before I build your path, I need to understand your starting point.
                 </div>
                 <h1 className="mt-6 font-display text-2xl font-bold tracking-tight">{QUESTIONS[step].q}</h1>
                 <div className="mt-5 space-y-2">
                   {QUESTIONS[step].options.map((o) => (
-                    <button key={o.label} onClick={() => choose(o.value)} className="flex w-full items-center justify-between rounded-btn border border-border bg-surface px-4 py-3 text-left text-primary hover:border-accent/50 hover:bg-hover">
-                      {o.label}
-                      <span className="text-muted">○</span>
-                    </button>
+                    <motion.button
+                      key={o.label}
+                      onClick={() => choose(o.value)}
+                      whileTap={{ scale: 0.98 }}
+                      className="group flex w-full items-center justify-between rounded-btn border border-border bg-surface px-4 py-3 text-left text-primary transition-colors hover:border-accent-soft hover:bg-hover"
+                    >
+                      <span className="flex items-center gap-3">
+                        <span className="grid h-5 w-5 place-items-center rounded-full border border-border text-accent transition-colors group-hover:border-accent">
+                          <Check size={12} className="opacity-0 transition-opacity group-hover:opacity-70" />
+                        </span>
+                        {o.label}
+                      </span>
+                      <ArrowRight size={14} className="text-muted opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+                    </motion.button>
                   ))}
                 </div>
               </motion.div>
@@ -193,7 +219,67 @@ export default function ProfileSetup() {
             />
           )}
         </div>
+
+        <div className="relative hidden lg:block">
+          <ProfilePreview
+            goal={goal}
+            role={role}
+            answers={answers}
+            interests={interests}
+            step={showConfirm ? QUESTIONS.length : step}
+          />
+        </div>
       </main>
+    </div>
+  );
+}
+
+function experienceLabel(v?: number | string) {
+  const comfort = typeof v === "number" ? v : 50;
+  return comfort >= 90 ? "Advanced" : comfort >= 70 ? "Intermediate" : "Beginner";
+}
+
+/* Live-building profile preview — mirrors exactly what the system has learned
+   so far, with dashed placeholders for what's still unanswered. Reinforces
+   "the product is assembling something as you go." */
+function ProfilePreview({ goal, role, answers, interests, step }: {
+  goal: string; role: string; answers: Partial<Answer>; interests: string[]; step: number;
+}) {
+  const outcomeLabel =
+    typeof answers.outcome === "string"
+      ? QUESTIONS[2].options.find((o) => o.value === answers.outcome)?.label ?? answers.outcome
+      : null;
+  const rows: { label: string; value: string | null }[] = [
+    { label: "Goal", value: goal.trim() || null },
+    { label: "Target role", value: role },
+    { label: "Experience", value: answers.python !== undefined ? experienceLabel(answers.python) : null },
+    { label: "Study time", value: answers.study !== undefined ? `${answers.study} hrs/week` : null },
+    { label: "Outcome", value: outcomeLabel },
+  ];
+  return (
+    <div className="sticky top-8 rounded-panel border border-border bg-surface p-6">
+      <p className="section-eyebrow">Building your profile</p>
+      <p className="mt-2 text-sm text-muted">Fills in as you answer. Question {Math.min(step, 3)} of 3.</p>
+      <div className="mt-4 space-y-3">
+        {rows.map((r) => (
+          <div key={r.label} className="border-b border-border-subtle pb-3 last:border-0">
+            <p className="meta">{r.label}</p>
+            {r.value ? (
+              <p className="mt-1 font-mono text-sm text-primary">{r.value}</p>
+            ) : (
+              <p className="mt-1 text-sm text-muted/60">—</p>
+            )}
+          </div>
+        ))}
+        <div>
+          <p className="meta">Interests</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {interests.map((it) => (
+              <span key={it} className="pill">{it}</span>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -211,11 +297,17 @@ function Confirmation({ profile, interests, onAddInterest, onRemoveInterest, dra
       <h1 className="mt-2 font-display text-2xl font-bold tracking-tight">Here's what I understand about you</h1>
 
       <div className="mt-5 space-y-3">
-        {[["Goal", profile.goal], ["Target role", profile.target_role], ["Timeline", `${profile.timeline_months} months`], ["Study time", `${profile.study_time_per_week} hrs/week`], ["Experience", profile.experience_level]].map(([k, v]) => (
-          <div key={k} className="flex justify-between border-b border-border-subtle py-2">
+        {([["Goal", profile.goal], ["Target role", profile.target_role], ["Timeline", `${profile.timeline_months} months`], ["Study time", `${profile.study_time_per_week} hrs/week`], ["Experience", profile.experience_level]] as const).map(([k, v], i) => (
+          <motion.div
+            key={k}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.06, duration: 0.3 }}
+            className="flex justify-between border-b border-border-subtle py-2"
+          >
             <span className="text-sm text-muted">{k}</span>
             <span className="max-w-[60%] text-right text-sm font-medium text-primary">{v}</span>
-          </div>
+          </motion.div>
         ))}
       </div>
 

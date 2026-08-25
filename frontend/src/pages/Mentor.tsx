@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -106,12 +106,12 @@ export default function Mentor() {
 
       <div className="mt-3 flex flex-wrap gap-2">
         {SUGGESTIONS.map((s) => (
-          <button key={s} onClick={() => send(s)} className="pill hover:border-accent/50 hover:text-primary">{s}</button>
+          <button key={s} onClick={() => send(s)} className="pill hover:border-accent-soft hover:text-primary">{s}</button>
         ))}
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="mt-3 flex gap-2">
-        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask Pathwise…" className="input" />
+        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask Astrolabe…" className="input" />
         <button type="submit" disabled={chat.isPending || !input.trim()} className="btn-primary disabled:opacity-40"><Send size={16} /></button>
       </form>
     </div>

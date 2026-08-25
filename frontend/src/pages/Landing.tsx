@@ -1,10 +1,11 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Compass, GitBranch, Route, MessageSquare,
   Sparkles, type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { SpotlightCard, EvidencePanel } from "../components/ui";
 
 /* Orchestrated page-load: content rises in while the route draws itself. */
 const EASE = [0.21, 0.65, 0.36, 1] as const;
@@ -41,14 +42,14 @@ function RoutePreview() {
         aria-hidden
       />
       <div className="aurora-blob animate-aurora right-[-70px] top-[-80px] h-56 w-56 bg-accent/25" aria-hidden />
-      <div className="aurora-blob animate-aurora-slow bottom-[-90px] left-[-60px] h-52 w-52 bg-progress/20" aria-hidden />
+      <div className="aurora-blob animate-aurora-slow bottom-[-90px] left-[-60px] h-52 w-52 bg-accent-soft" aria-hidden />
 
       <p className="section-eyebrow">Path preview</p>
       <svg viewBox="0 0 420 290" className="relative mt-3 w-full" role="img" aria-label="A route drawing itself from your goal to your target role">
         <defs>
           <linearGradient id="routeGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#8B5CF6" />
-            <stop offset="100%" stopColor="#14B8A6" />
+        <stop offset="0%" stopColor="var(--color-brand-active)" />
+        <stop offset="100%" stopColor="var(--color-brand)" />
           </linearGradient>
         </defs>
 
@@ -96,7 +97,7 @@ function RoutePreview() {
               cx={w.cx} cy={w.cy} r="4.5" fill="#EDF1FA"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: w.t, type: "spring", stiffness: 380, damping: 16 }}
+              transition={{ delay: w.t, type: "spring", bounce: 0.2, duration: 0.45 }}
               style={{ transformOrigin: `${w.cx}px ${w.cy}px` }}
             />
             <motion.text
@@ -119,7 +120,7 @@ function RoutePreview() {
 /* ---- Sections ------------------------------------------------------------ */
 
 const STEPS: { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: Compass, title: "State your goal", body: "One sentence is enough. Pathwise extracts the role, timeline, and outcome." },
+  { icon: Compass, title: "State your goal", body: "One sentence is enough. Astrolabe extracts the role, timeline, and outcome." },
   { icon: GitBranch, title: "Find your gaps", body: "We compare what you know now against what the role demands — skill by skill." },
   { icon: Route, title: "Follow your path", body: "Courses, projects, and assessments ordered by prerequisites. Never a flat list." },
   { icon: MessageSquare, title: "Understand each step", body: "Ask \u201Cwhy this?\u201D at any point. Answers come from your actual path, not generic advice." },
@@ -135,14 +136,14 @@ export default function Landing() {
       {/* ambient aurora behind the whole hero */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[640px] overflow-hidden" aria-hidden>
         <div className="aurora-blob animate-aurora left-[12%] top-[-140px] h-[384px] w-[384px] bg-accent/15" />
-        <div className="aurora-blob animate-aurora-slow right-[8%] top-[40px] h-[320px] w-[320px] bg-progress/10" />
+        <div className="aurora-blob animate-aurora-slow right-[8%] top-[40px] h-[320px] w-[320px] bg-accent-soft" />
       </div>
 
       <header className="sticky top-0 z-40 border-b border-border/50 glass">
         <div className="container-page flex items-center justify-between py-4">
           <Link to="/" className="flex items-center gap-2">
             <span className="grid h-[32px] w-[32px] place-items-center rounded-btn bg-route text-white"><Compass size={18} /></span>
-            <span className="font-display text-lg font-bold tracking-tight">Pathwise</span>
+            <span className="font-display text-lg font-bold tracking-tight">Astrolabe</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-secondary md:flex">
             <a href="#how" className="transition-colors hover:text-primary">How it works</a>
@@ -164,10 +165,10 @@ export default function Landing() {
           <h1 className="mt-3 font-display text-5xl font-bold leading-[1.04] tracking-tight md:text-6xl">
             Your goal.
             <br />
-            <span className="text-gradient">Your learning path.</span>
+            <span className="text-primary">Your learning path.</span>
           </h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-secondary">
-            Describe where you want to go in plain words. Pathwise maps what you already
+            Describe where you want to go in plain words. Astrolabe maps what you already
             know, finds the gaps, and sequences exactly what to learn next — with a
             reason for every step.
           </p>
@@ -187,6 +188,22 @@ export default function Landing() {
         </motion.div>
       </section>
 
+      {/* Domain breadth strip — the catalog spans every track below. */}
+      <section className="marquee border-y border-border/60 py-4" aria-label="Domains covered">
+        <div className="marquee-track">
+          {[0, 1].map((dup) => (
+            <div key={dup} className="flex shrink-0 items-center gap-12 pr-12" aria-hidden={dup === 1}>
+              {["Frontend", "Backend", "Mobile", "Data Science", "Machine Learning", "Generative AI", "Cloud", "DevOps", "Security", "Blockchain"].map((d) => (
+                <span key={d} className="flex items-center gap-3 text-sm font-medium text-muted">
+                  <span className="h-1.5 w-1.5 rounded-full bg-route inline-block" aria-hidden />
+                  {d}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* How it works */}
       <section id="how" className="container-page scroll-mt-24 py-16">
         <Reveal>
@@ -196,7 +213,7 @@ export default function Landing() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s, i) => (
             <Reveal key={s.title} delay={i * 0.08}>
-              <div className="card group h-full p-5 transition-colors duration-200 hover:border-accent/40">
+              <div className="card group h-full p-5 transition-colors duration-200 hover:border-accent-soft">
                 <div className="flex items-center gap-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-btn bg-accent-soft text-accent transition-transform duration-200 group-hover:scale-110">
                     <s.icon size={20} />
@@ -212,122 +229,114 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Personalization + gaps */}
+      {/* Bento — one dominant product tile anchors; supporting tiles vary in
+          size so hierarchy, not uniformity, guides the eye. */}
       <section id="personalization" className="container-page scroll-mt-24 py-16">
-        <div className="grid items-start gap-6 md:grid-cols-2">
-          <Reveal>
-            <div className="card h-full p-6">
-              <p className="section-eyebrow">Personalization</p>
-              <h3 className="mt-2 font-display text-2xl font-bold">Built around your starting point</h3>
-              <p className="mt-2 leading-relaxed text-secondary">
-                Same goal, different learners, different paths. Yours adapts to your
-                experience, your weekly hours, and what you actually care about.
+        <Reveal>
+          <h2 className="font-display text-3xl font-bold tracking-tight">Built around you</h2>
+          <p className="mt-2 max-w-xl text-secondary">
+            Same goal, different learners, different paths — adapted as you learn.
+          </p>
+        </Reveal>
+        <div className="mt-8 grid gap-4 lg:grid-cols-3 lg:grid-rows-[auto_auto]">
+          {/* Dominant tile: the mentor, showing real product UI */}
+          <SpotlightCard className="card rounded-card p-6 lg:col-span-2 lg:row-span-2">
+            <div id="mentor" className="scroll-mt-24">
+              <p className="section-eyebrow">AI Mentor</p>
+              <h3 className="mt-2 font-display text-2xl font-bold">Ask anything about your path</h3>
+              <p className="mt-2 max-w-md leading-relaxed text-secondary">
+                Answers come from your actual courses, progress, and prerequisites — never generic advice.
               </p>
-              <ul className="mt-4 space-y-2 text-sm text-secondary">
-                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />Already strong in Python? Skip ahead.</li>
-                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-progress" aria-hidden />Three hours a week? The timeline stretches — not the workload.</li>
-                <li className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-info" aria-hidden />Curious about GenAI? Electives shift toward LLMs and RAG.</li>
-              </ul>
-            </div>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div className="card h-full p-6">
-              <p className="section-eyebrow">Skill gaps</p>
-              <h3 className="mt-2 font-display text-2xl font-bold">See exactly what's missing</h3>
-              <div className="mt-5 space-y-3.5">
-                {GAP_BARS.map(([k, v], i) => (
-                  <div key={k}>
-                    <div className="mb-1 flex justify-between text-sm">
-                      <span className="text-primary">{k}</span>
-                      <span className="tabular-nums text-secondary">{v}%</span>
-                    </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-border">
-                      <motion.div
-                        className="h-2 rounded-full bg-gradient-to-r from-accent to-progress"
-                        initial={{ width: 0 }}
-                        whileInView={{ width: `${v}%` }}
-                        viewport={{ once: true, margin: "-60px" }}
-                        transition={{ duration: 0.9, delay: i * 0.07, ease: EASE }}
-                      />
-                    </div>
-                  </div>
+              <div className="mt-5 space-y-3">
+                <div className="max-w-sm rounded-btn rounded-bl-sm bg-surface p-3 text-sm text-secondary">
+                  Why statistics before machine learning?
+                </div>
+                <EvidencePanel
+                  evidence={{
+                    course_signatures: [
+                      "Association rule mining with Apriori and anomaly detection rounded out the unsupervised toolkit.",
+                      "Learners who started with statistics reviewed later ML modules as review, not first contact.",
+                    ],
+                    matched_signatures: [],
+                    similarity: 0.81,
+                    peer_courses: ["Statistical Learning", "Feature Engineering"],
+                    source: "learner reviews",
+                  }}
+                />
+              </div>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {["Why is this next?", "What should I learn today?", "Am I on track?"].map((q) => (
+                  <span key={q} className="pill"><MessageSquare size={12} /> {q}</span>
                 ))}
               </div>
             </div>
-          </Reveal>
-        </div>
-      </section>
+          </SpotlightCard>
 
-      {/* Adaptive */}
-      <section id="adaptive" className="container-page scroll-mt-24 py-16">
-        <Reveal>
-          <div className="glass flex flex-col items-start gap-4 rounded-panel p-8 md:flex-row md:items-center md:justify-between">
+          {/* Supporting tiles */}
+          <SpotlightCard className="card rounded-card p-6">
+            <p className="section-eyebrow">Skill gaps</p>
+            <h3 className="mt-2 font-display text-lg font-bold">See what's missing</h3>
+            <div className="mt-4 space-y-3">
+              {GAP_BARS.slice(0, 3).map(([k, v], i) => (
+                <div key={k}>
+                  <div className="mb-1 flex justify-between text-xs">
+                    <span className="text-primary">{k}</span>
+                    <span className="tabular-nums text-secondary">{v}%</span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+                    <motion.div
+                      className="h-full rounded-full bg-progress"
+                      style={{ width: `${v}%`, transformOrigin: "left" }}
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{ duration: 0.9, delay: i * 0.08, ease: EASE }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SpotlightCard>
+
+          <SpotlightCard className="card rounded-card p-6">
+            <p className="section-eyebrow">Personalization</p>
+            <h3 className="mt-2 font-display text-lg font-bold">Tuned to your life</h3>
+            <ul className="mt-4 space-y-2 text-sm text-secondary">
+              <li className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />Strong in Python? Skip ahead.</li>
+              <li className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-progress" aria-hidden />3 hrs a week? Timeline stretches, not workload.</li>
+            </ul>
+          </SpotlightCard>
+        </div>
+
+        {/* Wide adaptive tile */}
+        <Reveal delay={0.1}>
+          <SpotlightCard className="card mt-4 flex flex-col items-start gap-4 rounded-card p-6 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="section-eyebrow">Adaptive</p>
-              <h3 className="mt-2 font-display text-2xl font-bold">Your path changes as you learn</h3>
+              <h3 className="mt-2 font-display text-xl font-bold">Your path changes as you learn</h3>
               <p className="mt-2 max-w-lg leading-relaxed text-secondary">
-                Mark a resource too difficult or already known, and Pathwise regenerates
+                Mark a resource too difficult or already known, and Astrolabe regenerates
                 the next steps around your real progress — mid-journey, not next semester.
               </p>
             </div>
-            <Sparkles className="h-[48px] w-[48px] shrink-0 text-accent" aria-hidden />
-          </div>
+            <Sparkles className="h-10 w-10 shrink-0 text-accent" aria-hidden />
+          </SpotlightCard>
         </Reveal>
-      </section>
-
-      {/* Mentor */}
-      <section id="mentor" className="container-page scroll-mt-24 py-16">
-        <div className="grid items-center gap-8 md:grid-cols-2">
-          <Reveal className="order-2 md:order-1">
-            <p className="section-eyebrow">AI Mentor</p>
-            <h3 className="mt-2 font-display text-2xl font-bold">Ask anything about your path</h3>
-            <p className="mt-2 leading-relaxed text-secondary">
-              The mentor answers from your actual path — your courses, your progress,
-              your prerequisites — never generic advice.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {["Why is this next?", "What should I learn today?", "Am I on track?"].map((q) => (
-                <span key={q} className="pill"><MessageSquare size={12} /> {q}</span>
-              ))}
-            </div>
-          </Reveal>
-          <Reveal delay={0.1} className="order-1 md:order-2">
-            <div className="card p-6">
-              <div className="mb-3 flex items-center gap-2 font-medium text-accent"><Sparkles size={16} /> Pathwise Mentor</div>
-              <div className="space-y-3">
-                <div className="rounded-btn rounded-bl-sm bg-surface p-3 text-sm text-secondary">
-                  Why statistics before machine learning?
-                </div>
-                <motion.div
-                  className="rounded-btn rounded-br-sm bg-accent-soft p-3 text-sm leading-relaxed text-primary"
-                  animate={{ y: [0, -4, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  ML leans on distributions, hypothesis testing, and evaluation. Your path
-                  places statistics first so every later module lands on solid ground.
-                </motion.div>
-              </div>
-            </div>
-          </Reveal>
-        </div>
       </section>
 
       {/* Final CTA */}
       <section className="container-page py-16">
         <Reveal>
-          <div className="relative overflow-hidden rounded-panel p-[1px]">
-            <div className="absolute inset-0 bg-route opacity-60" aria-hidden />
-            <div className="relative flex flex-col items-center gap-5 rounded-panel bg-elevated px-8 py-12 text-center">
-              <h2 className="font-display text-3xl font-bold tracking-tight">Start with one sentence</h2>
-              <p className="max-w-md text-secondary">No setup. Tell Pathwise where you want to go — it charts the rest.</p>
-              <Link to="/onboarding" className="btn-primary">Build my learning path <ArrowRight size={16} /></Link>
-            </div>
+          <div className="border-beam rounded-panel bg-elevated px-8 py-12 text-center">
+            <h2 className="font-display text-3xl font-bold tracking-tight">Start with one sentence</h2>
+            <p className="mx-auto mt-3 max-w-md text-secondary">No setup. Tell Astrolabe where you want to go — it charts the rest.</p>
+            <Link to="/onboarding" className="btn-primary mt-6">Build my learning path <ArrowRight size={16} /></Link>
           </div>
         </Reveal>
       </section>
 
       <footer className="container-page border-t border-border py-8 text-sm text-muted">
-        Pathwise — personalized learning paths. Built for the HCL hackathon.
+        Astrolabe — personalized learning paths. Built for the HCL hackathon.
       </footer>
     </div>
   );

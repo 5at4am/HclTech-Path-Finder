@@ -56,10 +56,11 @@ export default function Projects() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {projects.map((r) => (
+          {projects.map((r, i) => (
             <ResourceCard
               key={r.resource.id}
               rec={r}
+              index={i}
               started={started.has(r.resource.id)}
               onStart={(id) => start.mutate(id)}
             />

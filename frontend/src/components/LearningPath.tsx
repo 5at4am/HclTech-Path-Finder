@@ -18,6 +18,17 @@ function NodeIcon({ status }: { status: string }) {
   return <CircleDot size={14} />;
 }
 
+/* Surface treatment encodes status: current is raised + violet-bordered,
+   recommended gets a teal edge, locked drops to a low-opacity flat tile, and
+   everything else sits at plain surface. Selected overrides to violet. */
+function nodeSurface(status: string, selected: boolean) {
+  if (selected) return "border-accent bg-accent-soft";
+  if (status === "current") return "border-accent bg-elevated";
+  if (status === "recommended") return "border-accent-soft bg-surface";
+  if (status === "locked") return "border-transparent bg-surface opacity-55";
+  return "border-border bg-surface";
+}
+
 export default function LearningPath({
   steps,
   selectedId,
@@ -32,20 +43,23 @@ export default function LearningPath({
       {steps.map((step, i) => {
         const isLast = i === steps.length - 1;
         const selected = selectedId === step.id;
+        const lineColor =
+          step.status === "completed"
+            ? "bg-accent"
+            : step.status === "current"
+            ? "bg-accent"
+            : "bg-border";
         return (
           <motion.li
             key={step.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: Math.min(i * 0.04, 0.6), duration: 0.35 }}
-            className="relative pl-12"
+            className="relative pl-14"
           >
             {!isLast && (
               <span
-                className={cx(
-                  "absolute left-[18px] top-9 bottom-0 w-px",
-                  step.status === "completed" ? "bg-success/50" : "bg-border"
-                )}
+                className={cx("absolute left-[23px] top-10 bottom-0 w-px", lineColor)}
                 aria-hidden
               />
             )}
@@ -63,9 +77,10 @@ export default function LearningPath({
               type="button"
               onClick={() => onSelect?.(step)}
               className={cx(
-                "mb-3 w-full rounded-card border bg-surface p-4 text-left transition-colors",
-                selected ? "border-accent/60 bg-accent-soft" : "border-border hover:border-accent/40 hover:bg-hover",
-                step.status === "locked" && "opacity-70"
+                "mb-3 w-full rounded-card border text-left transition-colors hover:border-accent-soft hover:bg-hover",
+                nodeSurface(step.status, selected),
+                step.milestone ? "py-5" : "py-4",
+                "px-4"
               )}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">

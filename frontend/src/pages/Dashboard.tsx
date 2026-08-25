@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Flame, Clock, Target, TrendingUp, ListChecks } from "lucide-react";
 import { api } from "../lib/api";
 import { useApp } from "../lib/store";
-import { SkillBar, cx, ErrorState, DashboardSkeleton } from "../components/ui";
+import { SkillBar, cx, ErrorState, DashboardSkeleton, CountUp } from "../components/ui";
 import type { DashboardResponse } from "../lib/types";
 
 export default function Dashboard() {
@@ -53,15 +53,21 @@ export default function Dashboard() {
       </div>
 
       {d.continue_resource && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-5">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-card border border-accent-soft bg-elevated p-5">
           <p className="meta">Continue your path</p>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-primary">{d.continue_resource.title}</h2>
-              <div className="mt-2 h-2 w-[256px] max-w-full rounded-full bg-border">
-                <div className="h-2 rounded-full bg-progress" style={{ width: `${d.continue_pct}%` }} />
+              <div className="mt-2 h-2 w-64 max-w-full overflow-hidden rounded-full bg-border">
+                <motion.div
+                  className="h-2 rounded-full bg-accent"
+                  style={{ width: `${d.continue_pct}%`, transformOrigin: "left" }}
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.9, delay: 0.2, ease: [0.21, 0.65, 0.36, 1] }}
+                />
               </div>
-              <p className="mt-1 text-xs text-muted">{d.continue_pct}% · {d.continue_remaining_hours} hrs remaining</p>
+              <p className="mt-1 text-xs tabular-nums text-muted">{d.continue_pct}% · {d.continue_remaining_hours} hrs remaining</p>
             </div>
             <button onClick={() => navigate("/path")} className="btn-primary">Continue learning <ArrowRight size={16} /></button>
           </div>
@@ -73,10 +79,16 @@ export default function Dashboard() {
           <div className="mb-3 flex items-center gap-2"><ListChecks size={16} className="text-accent" /><h3 className="font-semibold">Next actions</h3></div>
           <ul className="space-y-2">
             {d.next_actions.map((a, i) => (
-              <li key={i} className="flex items-center gap-2 rounded-btn bg-surface px-3 py-2 text-sm text-primary">
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-accent-soft text-[11px] text-accent">{i + 1}</span>
+              <motion.li
+                key={i}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15 + i * 0.07, duration: 0.35 }}
+                className="flex items-center gap-2 rounded-btn bg-surface px-3 py-2 text-sm text-primary"
+              >
+                <span className="grid h-5 w-5 place-items-center rounded-full bg-accent-soft text-[11px] font-semibold tabular-nums text-accent">{i + 1}</span>
                 {a}
-              </li>
+              </motion.li>
             ))}
           </ul>
         </section>
@@ -93,8 +105,8 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="card p-5">
-          <h3 className="mb-3 font-semibold text-warning">Priority gaps</h3>
+          <section className="card p-5">
+            <h3 className="mb-3 font-semibold text-signal">Priority gaps</h3>
           <ol className="space-y-2">
             {d.priority_gaps.map((g, i) => (
               <li key={g.skill} className="flex items-center gap-3 text-sm">
@@ -127,15 +139,19 @@ export default function Dashboard() {
 }
 
 function Metric({ icon, label, value, delay = 0 }: { icon: ReactNode; label: string; value: string; delay?: number }) {
+  // Split a leading integer off so it can tick up ("42%" → CountUp + "%").
+  const match = value.match(/^(\d+)(.*)$/);
   return (
     <motion.div
-      className="card p-4 transition-colors duration-200 hover:border-accent/40"
+      className="card p-4 transition-colors duration-200 hover:border-accent-soft"
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: [0.21, 0.65, 0.36, 1] }}
     >
       <div className="flex items-center gap-2 text-muted">{icon}<span className="text-xs">{label}</span></div>
-      <p className="mt-2 text-2xl font-bold tracking-tight tabular-nums">{value}</p>
+      <p className="mt-2 text-2xl font-bold tracking-tight tabular-nums">
+        {match ? (<><CountUp value={parseInt(match[1], 10)} />{match[2]}</>) : value}
+      </p>
     </motion.div>
   );
 }
