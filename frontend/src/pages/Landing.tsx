@@ -33,15 +33,15 @@ function RoutePreview() {
   const ghost = "M 388 46 C 400 37, 408 32, 418 28";
   return (
     <div className="glass relative overflow-hidden rounded-panel p-6">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-60"
-        style={{
-          backgroundImage: "radial-gradient(rgba(148,163,184,0.13) 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
-        }}
-        aria-hidden
-      />
-      <div className="aurora-blob animate-aurora right-[-70px] top-[-80px] h-56 w-56 bg-accent/25" aria-hidden />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            backgroundImage: "radial-gradient(rgba(131,56,236,0.10) 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+          }}
+          aria-hidden
+        />
+      <div className="aurora-blob animate-aurora right-[-70px] top-[-80px] h-56 w-56" aria-hidden />
       <div className="aurora-blob animate-aurora-slow bottom-[-90px] left-[-60px] h-52 w-52 bg-accent-soft" aria-hidden />
 
       <p className="section-eyebrow">Path preview</p>
@@ -57,7 +57,7 @@ function RoutePreview() {
         <motion.path
           d={ghost}
           fill="none"
-          stroke="#687592"
+          stroke="var(--color-border-strong)"
           strokeWidth="1.5"
           strokeDasharray="3 7"
           strokeLinecap="round"
@@ -94,7 +94,7 @@ function RoutePreview() {
               style={{ transformOrigin: `${w.cx}px ${w.cy}px` }}
             />
             <motion.circle
-              cx={w.cx} cy={w.cy} r="4.5" fill="#EDF1FA"
+               cx={w.cx} cy={w.cy} r="4.5" fill="var(--color-brand)"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: w.t, type: "spring", bounce: 0.2, duration: 0.45 }}
@@ -102,11 +102,11 @@ function RoutePreview() {
             />
             <motion.text
               x={w.lx} y={w.ly} textAnchor={w.anchor}
-              className="fill-secondary text-[12px] font-medium tracking-wide"
+              className="fill-secondary text-xs font-medium tracking-wide"
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: w.t + 0.15, duration: 0.45 }}
-              style={{ fontFamily: "'Space Grotesk', Inter, sans-serif" }}
+              style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}
             >
               {w.label}
             </motion.text>
@@ -135,7 +135,7 @@ export default function Landing() {
     <div className="app-bg min-h-screen">
       {/* ambient aurora behind the whole hero */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[640px] overflow-hidden" aria-hidden>
-        <div className="aurora-blob animate-aurora left-[12%] top-[-140px] h-[384px] w-[384px] bg-accent/15" />
+        <div className="aurora-blob animate-aurora left-[12%] top-[-140px] h-[384px] w-[384px]" />
         <div className="aurora-blob animate-aurora-slow right-[8%] top-[40px] h-[320px] w-[320px] bg-accent-soft" />
       </div>
 

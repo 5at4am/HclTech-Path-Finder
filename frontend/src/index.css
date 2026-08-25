@@ -748,6 +748,32 @@ a {
   background: var(--color-background-subtle);
 }
 
+.input-error,
+.textarea-error,
+.select-error {
+  border-color: var(--color-error);
+}
+
+.input-error:focus,
+.textarea-error:focus,
+.select-error:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+.input-success,
+.textarea-success,
+.select-success {
+  border-color: var(--color-success);
+}
+
+.input-success:focus,
+.textarea-success:focus,
+.select-success:focus {
+  border-color: var(--color-success);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+
 /* 16. LABEL ---------------------------------------------------------------- */
 
 .label {
@@ -1284,7 +1310,51 @@ a {
   animation: aurora-float 14s ease-in-out infinite;
 }
 
+.animate-aurora {
+  animation: aurora-float 10s ease-in-out infinite;
+}
+
 @keyframes aurora-float {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(20px, -20px) scale(1.08); }
+}
+
+/* Cursor-tracking spotlight used by SpotlightCard (sets --mx / --my). */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    360px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(131, 56, 236, 0.12),
+    transparent 40%
+  );
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+  pointer-events: none;
+}
+
+.spotlight-card:hover::before {
+  opacity: 1;
+}
+
+/* Domain marquee on the landing page. */
+.marquee {
+  overflow: hidden;
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }

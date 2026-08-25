@@ -37,7 +37,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         // Evidence / data mono — visually marks "this is a literal fact pulled
         // from data" (skill %, similarity scores, evidence quotes).
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
@@ -52,11 +52,6 @@ export default {
         btn: "10px",
         card: "14px",
         panel: "20px",
-      },
-      spacing: {
-        "4": "4px", "8": "8px", "12": "12px", "16": "16px", "20": "20px",
-        "24": "24px", "32": "32px", "40": "40px", "48": "48px",
-        "64": "64px", "80": "80px", "96": "96px",
       },
     },
   },

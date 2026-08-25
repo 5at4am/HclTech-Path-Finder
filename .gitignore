@@ -38,3 +38,6 @@ design.md
 DESIGN_INSTRUCTION.md
 instruction.md
 memory.md
+
+# Large ML cache artifact (local only)
+backend/app/ml/_evidence_cache.pkl

@@ -25,7 +25,7 @@ function RouteProgress({ total, completed }: { total: number; completed: number 
         <stop offset="100%" stopColor="var(--color-brand)" />
         </linearGradient>
       </defs>
-       <line x1="10" y1="12" x2="310" y2="12" stroke="#2c2a35" strokeWidth="2" strokeLinecap="round" />
+       <line x1="10" y1="12" x2="310" y2="12" stroke="var(--color-border)" strokeWidth="2" strokeLinecap="round" />
       <motion.line
         x1="10" y1="12" x2="310" y2="12"
         stroke="url(#analyzingRoute)" strokeWidth="2" strokeLinecap="round"
@@ -40,7 +40,7 @@ function RouteProgress({ total, completed }: { total: number; completed: number 
           cy="12"
           r="4"
           className={i < completed ? "fill-success" : "fill-elevated"}
-          stroke="#273049"
+          stroke="var(--color-border)"
           strokeWidth="1"
         />
       ))}

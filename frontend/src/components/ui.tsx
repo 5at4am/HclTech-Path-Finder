@@ -170,7 +170,7 @@ export function ScoreRing({ value, label, color = "var(--color-brand)" }: { valu
   return (
     <div className="flex items-center gap-3">
       <svg width="42" height="42" viewBox="0 0 42 42" className="-rotate-90">
-        <circle cx="21" cy="21" r={r} fill="none" stroke="#273049" strokeWidth="4" />
+        <circle cx="21" cy="21" r={r} fill="none" stroke="var(--color-border)" strokeWidth="4" />
         <circle cx="21" cy="21" r={r} fill="none" stroke={color} strokeWidth="4" strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round" />
       </svg>
       {label && <span className="text-sm font-semibold text-primary">{label}</span>}

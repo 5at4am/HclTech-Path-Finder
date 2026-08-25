@@ -69,8 +69,8 @@ export default function Skills() {
             <div className="h-[256px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={chartData} outerRadius="75%">
-                  <PolarGrid stroke="#232329" />
-                  <PolarAngleAxis dataKey="skill" tick={{ fill: "#9AA6BF", fontSize: 11 }} />
+<PolarGrid stroke="var(--color-border-subtle)" />
+        <PolarAngleAxis dataKey="skill" tick={{ fill: "var(--color-text-muted)", fontSize: 11 }} />
                   <Radar dataKey="level" stroke="var(--color-brand)" fill="var(--color-brand)" fillOpacity={0.35} />
                 </RadarChart>
               </ResponsiveContainer>

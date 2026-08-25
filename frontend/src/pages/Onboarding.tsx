@@ -78,7 +78,7 @@ export default function Onboarding() {
 
       <main className="container-page relative grid flex-1 gap-10 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:pt-16">
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-          <div className="aurora-blob animate-aurora left-[10%] top-[10%] h-72 w-72 bg-accent/15" />
+          <div className="aurora-blob animate-aurora left-[10%] top-[10%] h-72 w-72" />
           <div className="aurora-blob animate-aurora-slow bottom-[8%] right-[12%] h-64 w-64 bg-accent-soft" />
         </div>
         <motion.div
