@@ -12,11 +12,11 @@ def apply_feedback(
     resource_id: str,
     helpful: bool,
     reason: str,
-) -> str:
+) -> str | None:
     learner = db.get(Learner, learner_id)
     resource = db.get(Resource, resource_id)
     if not learner:
-        return "No learner found."
+        return None
     fb = Feedback(learner_id=learner_id, resource_id=resource_id, helpful=helpful, reason=reason or "")
     db.add(fb)
 

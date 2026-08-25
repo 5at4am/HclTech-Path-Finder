@@ -22,9 +22,21 @@ GROQ_MODEL = os.environ.get("GROQ_MODEL", "qwen/qwen3.6-27b")
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{(BACKEND_DIR.parent / 'pathwise.db')}")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
-CORS_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    FRONTEND_URL,
+# Comma-separated list wins if provided, e.g.
+# CORS_ORIGINS=https://pathwise.vercel.app,https://pathwise-git-main-you.vercel.app
+_env_origins = [
+    o.strip().rstrip("/")
+    for o in os.environ.get("CORS_ORIGINS", "").split(",")
+    if o.strip()
 ]
+CORS_ORIGINS = list(
+    dict.fromkeys(
+        _env_origins
+        + [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:5173",
+            FRONTEND_URL.rstrip("/"),
+        ]
+    )
+)

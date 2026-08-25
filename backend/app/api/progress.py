@@ -24,7 +24,9 @@ def post(req: ProgressRequest, db: Session = Depends(get_db)):
 
 @router.get("/{learner_id}", response_model=dict)
 def get_progress(learner_id: str, db: Session = Depends(get_db)):
-    from ..models import Progress
+    from ..models import Learner, Progress
+    if not db.get(Learner, learner_id):
+        raise HTTPException(status_code=404, detail="Learner not found.")
     rows = db.query(Progress).filter(Progress.learner_id == learner_id).all()
     return {
         "learner_id": learner_id,

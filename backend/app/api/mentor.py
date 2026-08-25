@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -16,7 +16,9 @@ async def chat(req: MentorRequest, db: Session = Depends(get_db)):
     if not req.message or not req.message.strip():
         return MentorResponse(message="Ask me anything about your learning path.")
     r = await mentor_chat(db, req.learner_id, req.message)
-    return r or MentorResponse(message="Learner not found.")
+    if r is None:
+        raise HTTPException(status_code=404, detail="Learner not found.")
+    return r
 
 
 @router.get("/history/{learner_id}", response_model=list[MentorHistoryItem])

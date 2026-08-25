@@ -4,8 +4,15 @@ import sys
 from pathlib import Path
 
 # Allow importing the existing ML model (Model/solution.py) without moving it.
-MODEL_DIR = Path(__file__).resolve().parents[2] / "Model"
-if str(MODEL_DIR) not in sys.path:
+# Search a few candidate locations so this works whether the app runs from the
+# repo root (local dev), a backend-only deploy root (Render), or a container.
+_MODEL_CANDIDATES = [
+    Path(__file__).resolve().parents[2] / "Model",  # <repo>/Model
+    Path(__file__).resolve().parents[1] / "Model",  # <deploy_root>/Model
+    Path(__file__).resolve().parent / "Model",      # app/Model
+]
+MODEL_DIR = next((p for p in _MODEL_CANDIDATES if (p / "solution.py").exists()), None)
+if MODEL_DIR is not None and str(MODEL_DIR) not in sys.path:
     sys.path.insert(0, str(MODEL_DIR))
 
 from sqlalchemy import create_engine

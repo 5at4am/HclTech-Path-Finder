@@ -45,6 +45,7 @@ export default function Mentor() {
   const chat = useMutation({
     mutationFn: (message: string) => api.mentorChat(learnerId!, message),
     onSuccess: (res) => setMessages((m) => [...m, { role: "assistant", content: res.message }]),
+    onError: () => setMessages((m) => [...m, { role: "assistant", content: "I couldn't reach your learning data just now — try refreshing the page." }]),
   });
 
   function send(text: string) {
@@ -66,12 +67,14 @@ export default function Mentor() {
 
       <div className="flex-1 space-y-4 overflow-y-auto rounded-panel border border-border bg-surface p-4">
         {hydrated && messages.length === 0 && (
-          <div className="rounded-card border border-dashed border-border bg-elevated p-5 text-sm text-secondary">
-            Ask me anything about your learning path. Try one of these:
+          <div className="rounded-card border border-dashed border-border bg-elevated p-6 text-center">
+            <Sparkles size={22} className="mx-auto text-accent" aria-hidden />
+            <p className="mt-2 text-sm font-medium text-primary">Ask me anything about your path</p>
+            <p className="mt-1 text-xs text-secondary">Answers come from your actual courses, progress, and prerequisites.</p>
           </div>
         )}
         {!hydrated && history.isLoading && (
-          <div className="flex justify-start"><div className="rounded-card bg-elevated px-4 py-3 text-sm text-muted"><Loader2 className="inline animate-spin" /> loading conversation…</div></div>
+          <div className="flex justify-start"><div className="rounded-card rounded-bl-sm bg-elevated px-4 py-3 text-sm text-muted"><Loader2 className="inline animate-spin" /> loading conversation…</div></div>
         )}
         <AnimatePresence initial={false}>
           {messages.map((m, i) => (
@@ -82,7 +85,22 @@ export default function Mentor() {
             </motion.div>
           ))}
         </AnimatePresence>
-        {chat.isPending && <div className="flex justify-start"><div className="rounded-card bg-elevated px-4 py-3 text-sm text-muted"><Loader2 className="inline animate-spin" /> thinking…</div></div>}
+        {chat.isPending && (
+          <div className="flex justify-start">
+            <div className="rounded-card rounded-bl-sm bg-elevated px-4 py-3.5" role="status" aria-label="Mentor is thinking">
+              <span className="flex items-end gap-1">
+                {[0, 1, 2].map((i) => (
+                  <motion.span
+                    key={i}
+                    className="h-1.5 w-1.5 rounded-full bg-secondary"
+                    animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 0.9, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                  />
+                ))}
+              </span>
+            </div>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
 

@@ -49,23 +49,28 @@ def get_path(path_id: str, db: Session = Depends(get_db)):
 
     unlocks_map = build_unlocks([s.resource_id for s in steps], list(by_id.values()))
 
-    step_outs = [
-        LearningStepOut(
-            id=s.id, resource_id=s.resource_id, order=s.order, phase=s.phase,
-            status=s.status, completion_percentage=s.completion_percentage,
-            estimated_hours=s.estimated_hours, milestone=bool(s.milestone),
-            recommendation_score=float(s.recommendation_score), reason=s.reason,
-            prerequisites=s.prerequisites or [], skills_gained=s.skills_gained or [],
-            resource=ResourceOut(
-                id=r.id, title=r.title, type=r.type, domain=r.domain,
-                difficulty=r.difficulty, duration_hours=r.duration_hours, format=r.format,
-                description=r.description, skills_gained=r.skills_gained or [],
-                prerequisites=r.prerequisites or [], phase=r.phase, optional=bool(r.optional),
-                rating=float(r.rating or 0.0)),
-            unlocks=unlocks_map.get(s.resource_id, []),
+    step_outs = []
+    for s in steps:
+        r = by_id.get(s.resource_id)
+        if r is None:
+            # resource vanished from the catalog; skip rather than 500
+            continue
+        step_outs.append(
+            LearningStepOut(
+                id=s.id, resource_id=s.resource_id, order=s.order, phase=s.phase,
+                status=s.status, completion_percentage=s.completion_percentage,
+                estimated_hours=s.estimated_hours, milestone=bool(s.milestone),
+                recommendation_score=float(s.recommendation_score), reason=s.reason,
+                prerequisites=s.prerequisites or [], skills_gained=s.skills_gained or [],
+                resource=ResourceOut(
+                    id=r.id, title=r.title, type=r.type, domain=r.domain,
+                    difficulty=r.difficulty, duration_hours=r.duration_hours, format=r.format,
+                    description=r.description, skills_gained=r.skills_gained or [],
+                    prerequisites=r.prerequisites or [], phase=r.phase, optional=bool(r.optional),
+                    rating=float(r.rating or 0.0)),
+                unlocks=unlocks_map.get(s.resource_id, []),
+            )
         )
-        for s, r in ((s, by_id[s.resource_id]) for s in steps)
-    ]
     return PathOut(
         path_id=path.id, learner_id=path.learner_id, goal=path.goal,
         target_role=path.target_role, timeline_months=path.timeline_months,

@@ -99,6 +99,11 @@ def get_model(resources: Iterable) -> "RecommendationModel":
     return _model
 
 
+def model_ready() -> bool:
+    """True once a TF-IDF model has been fitted (startup rebuild or lazy get)."""
+    return _model is not None
+
+
 def rebuild_model(resources: Iterable) -> "RecommendationModel":
     global _model
     _model = RecommendationModel(resources)

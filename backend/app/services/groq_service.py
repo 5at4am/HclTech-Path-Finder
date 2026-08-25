@@ -51,6 +51,8 @@ async def groq_chat(system: str, user: str, temperature: float = 0.2, max_tokens
             groq_api_key=GROQ_API_KEY,
             temperature=temperature,
             max_tokens=max_tokens,
+            request_timeout=30,
+            max_retries=1,
         )
         msg = await llm.ainvoke([("system", system), ("user", user)])
         return _strip_think(msg.content)
