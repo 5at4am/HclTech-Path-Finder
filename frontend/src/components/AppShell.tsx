@@ -18,31 +18,42 @@ const NAV = [
   { to: "/mentor", label: "AI Mentor", icon: Sparkles },
 ];
 
+function Brand() {
+  return (
+    <div className="flex items-center gap-2">
+          <span className="grid h-[32px] w-[32px] place-items-center rounded-btn bg-route text-white">
+        <Compass size={18} />
+      </span>
+      <span className="font-display text-lg font-bold tracking-tight">Pathwise</span>
+    </div>
+  );
+}
+
 export default function AppShell() {
   const { learnerId } = useApp();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [greeting, setGreeting] = useState<string>("");
+  const [greetingLine, setGreetingLine] = useState<string>("Your learning home");
 
   useEffect(() => {
     const h = new Date().getHours();
-    setGreeting(h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening");
-    if (learnerId) {
-      api.dashboard(learnerId).then((d) => {
-        // greeting handled below; just ensure path exists
-      }).catch(() => {});
+    const salutation = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+    if (!learnerId) {
+      setGreetingLine("Your learning home");
+      return;
     }
+    api
+      .dashboard(learnerId)
+      .then((d) => setGreetingLine(d.name ? `${salutation}, ${d.name}` : salutation))
+      .catch(() => setGreetingLine(salutation));
   }, [learnerId]);
 
   return (
     <div className="app-bg min-h-screen md:flex">
       {/* Sidebar (desktop) */}
       <aside className="hidden w-60 shrink-0 border-r border-border bg-surface/60 px-4 py-6 md:block">
-        <div className="mb-8 flex items-center gap-2 px-2">
-          <span className="grid h-8 w-8 place-items-center rounded-btn bg-accent text-white">
-            <Compass size={18} />
-          </span>
-          <span className="text-lg font-bold tracking-tight">Pathwise</span>
+        <div className="mb-8 px-2">
+          <Brand />
         </div>
         <nav className="flex flex-col gap-1">
           {NAV.map((n) => (
@@ -70,14 +81,14 @@ export default function AppShell() {
           >
             <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
             <motion.aside
-              className="absolute left-0 top-0 h-full w-64 border-r border-border bg-surface p-4"
+              className="absolute left-0 top-0 h-full w-[256px] border-r border-border bg-surface p-4"
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: "tween", duration: 0.25 }}
             >
               <div className="mb-6 flex items-center justify-between">
-                <span className="text-lg font-bold">Pathwise</span>
+                <Brand />
                 <button onClick={() => setOpen(false)} aria-label="Close menu"><X size={20} /></button>
               </div>
               <nav className="flex flex-col gap-1">
@@ -93,11 +104,11 @@ export default function AppShell() {
       </AnimatePresence>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-bg/80 px-4 py-3 backdrop-blur md:px-8">
+        <header className="glass sticky top-0 z-30 flex items-center justify-between border-b border-border/50 px-4 py-3 md:px-8">
           <div className="flex items-center gap-3">
             <button className="md:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><Menu size={20} /></button>
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted">{greeting}</p>
+              <p className="text-[11px] uppercase tracking-wider text-muted">{greetingLine}</p>
               <h1 className="text-sm font-semibold text-primary">Your learning home</h1>
             </div>
           </div>

@@ -14,7 +14,13 @@ export function ResourceCard({
   const r = rec.resource;
   const TypeIcon = r.type === "project" ? FolderGit2 : r.type === "assessment" ? Check : BookOpen;
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card flex flex-col p-5">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      className="card flex flex-col p-5"
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 text-muted">
           <TypeIcon size={15} />
@@ -42,15 +48,15 @@ export function ResourceCard({
 
       <div className="mt-4 flex items-center justify-between gap-2 border-t border-border-subtle pt-3">
         <div className="flex items-center gap-2">
-          <button title="Helpful" onClick={() => onFeedback?.(r.id, true, "")} className="grid h-8 w-8 place-items-center rounded-btn border border-border text-secondary hover:text-success hover:border-success/40">
+          <button title="Helpful" onClick={() => onFeedback?.(r.id, true, "")} className="grid h-[32px] w-[32px] place-items-center rounded-btn border border-border text-secondary hover:text-success hover:border-success/40">
             <ThumbsUp size={14} />
           </button>
-          <button title="Not useful" onClick={() => onFeedback?.(r.id, false, "not_relevant")} className="grid h-8 w-8 place-items-center rounded-btn border border-border text-secondary hover:text-warning hover:border-warning/40">
+          <button title="Not useful" onClick={() => onFeedback?.(r.id, false, "not_relevant")} className="grid h-[32px] w-[32px] place-items-center rounded-btn border border-border text-secondary hover:text-warning hover:border-warning/40">
             <ThumbsDown size={14} />
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted">Match <span className="font-semibold text-primary">{Math.round(rec.match_score * 100)}%</span></span>
+          <span className="text-xs tabular-nums text-muted">Match <span className="font-semibold text-primary">{Math.round(rec.match_score * 100)}%</span></span>
           <button onClick={() => onStart?.(r.id)} disabled={started} className="btn-primary !py-1.5 !px-3 text-xs">
             {started ? "Started" : "Start"}
           </button>

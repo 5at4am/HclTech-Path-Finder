@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Flame, Clock, Target, TrendingUp, ListChecks } from "lucide-react";
 import { api } from "../lib/api";
 import { useApp } from "../lib/store";
-import { SkillBar, cx, ErrorState } from "../components/ui";
+import { SkillBar, cx, ErrorState, DashboardSkeleton } from "../components/ui";
 import type { DashboardResponse } from "../lib/types";
 
 export default function Dashboard() {
@@ -27,14 +27,14 @@ export default function Dashboard() {
       action={<button onClick={() => refetch()} className="btn-primary">Retry</button>}
     />
   );
-  if (isLoading || !data) return <div className="py-20 text-center text-muted">Loading your dashboard…</div>;
+  if (isLoading || !data) return <DashboardSkeleton />;
 
   const d = data as DashboardResponse;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Welcome back, {d.name}</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Welcome back, {d.name}</h1>
         <p className="text-secondary">You're working toward <span className="text-primary font-medium">{d.target_role}</span></p>
         {d.interests?.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-2">
@@ -46,10 +46,10 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Metric icon={<Target size={16} />} label="Path complete" value={`${d.path_complete_pct}%`} />
-        <Metric icon={<TrendingUp size={16} />} label="Skills covered" value={d.skills_covered} />
-        <Metric icon={<Flame size={16} />} label="Learning streak" value={`${d.streak_days} days`} />
-        <Metric icon={<Clock size={16} />} label="This week" value={`${d.hours_this_week} hrs`} />
+        <Metric delay={0} icon={<Target size={16} />} label="Path complete" value={`${d.path_complete_pct}%`} />
+        <Metric delay={0.06} icon={<TrendingUp size={16} />} label="Skills covered" value={d.skills_covered} />
+        <Metric delay={0.12} icon={<Flame size={16} />} label="Learning streak" value={`${d.streak_days} days`} />
+        <Metric delay={0.18} icon={<Clock size={16} />} label="This week" value={`${d.hours_this_week} hrs`} />
       </div>
 
       {d.continue_resource && (
@@ -58,7 +58,7 @@ export default function Dashboard() {
           <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-primary">{d.continue_resource.title}</h2>
-              <div className="mt-2 h-2 w-64 max-w-full rounded-full bg-border">
+              <div className="mt-2 h-2 w-[256px] max-w-full rounded-full bg-border">
                 <div className="h-2 rounded-full bg-progress" style={{ width: `${d.continue_pct}%` }} />
               </div>
               <p className="mt-1 text-xs text-muted">{d.continue_pct}% · {d.continue_remaining_hours} hrs remaining</p>
@@ -126,11 +126,16 @@ export default function Dashboard() {
   );
 }
 
-function Metric({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+function Metric({ icon, label, value, delay = 0 }: { icon: ReactNode; label: string; value: string; delay?: number }) {
   return (
-    <div className="card p-4">
+    <motion.div
+      className="card p-4 transition-colors duration-200 hover:border-accent/40"
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay, ease: [0.21, 0.65, 0.36, 1] }}
+    >
       <div className="flex items-center gap-2 text-muted">{icon}<span className="text-xs">{label}</span></div>
-      <p className="mt-2 text-2xl font-bold tracking-tight">{value}</p>
-    </div>
+      <p className="mt-2 text-2xl font-bold tracking-tight tabular-nums">{value}</p>
+    </motion.div>
   );
 }

@@ -1,4 +1,14 @@
-const BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+// Dev falls back to the local API; production must set VITE_API_BASE
+// (e.g. https://pathwise-api.onrender.com) in the Vercel project env vars.
+const BASE =
+  import.meta.env.VITE_API_BASE ||
+  (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
+
+if (!import.meta.env.DEV && !BASE) {
+  console.error(
+    "[api] VITE_API_BASE is not set — API calls will hit the frontend origin and fail."
+  );
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {

@@ -14,19 +14,20 @@ body,
 
 body {
   margin: 0;
-  background-color: #09090b;
-  color: #f4f4f5;
-  font-family: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  background-color: #070a12;
+  color: #edf1fa;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Subtle atmospheric background: very low-opacity purple radial glow. */
+/* Atmospheric background: indigo glow up top-right, teal low-left — the two
+   ends of the route gradient, so the whole app sits "on the chart". */
 .app-bg {
-  background-color: #09090b;
+  background-color: #070a12;
   background-image:
-    radial-gradient(900px 520px at 78% -8%, rgba(139, 92, 246, 0.10), transparent 60%),
-    radial-gradient(700px 420px at 8% 6%, rgba(20, 184, 166, 0.05), transparent 55%);
+    radial-gradient(900px 520px at 78% -8%, rgba(139, 92, 246, 0.11), transparent 60%),
+    radial-gradient(700px 420px at 8% 6%, rgba(20, 184, 166, 0.06), transparent 55%);
   background-attachment: fixed;
 }
 
@@ -41,22 +42,22 @@ body {
     @apply rounded-card border border-border bg-elevated;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-btn px-5 py-2.5 text-sm font-semibold transition-colors;
+    @apply inline-flex items-center justify-center gap-2 rounded-btn px-5 py-2.5 text-sm font-semibold transition-all duration-200;
   }
   .btn-primary {
-    @apply btn bg-accent text-white hover:bg-accent/90;
+    @apply btn bg-accent text-white shadow-[0_0_0_0_rgba(139,92,246,0)] hover:bg-accent/90 hover:shadow-[0_4px_24px_-6px_rgba(139,92,246,0.55)] active:scale-[0.98];
   }
   .btn-ghost {
-    @apply btn border border-border bg-transparent text-primary hover:bg-hover;
+    @apply btn border border-border bg-transparent text-primary hover:border-accent/50 hover:bg-hover active:scale-[0.98];
   }
   .btn-subtle {
-    @apply btn bg-hover text-secondary hover:text-primary;
+    @apply btn bg-hover text-secondary hover:text-primary active:scale-[0.98];
   }
   .pill {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 text-xs font-medium text-secondary;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-elevated px-3 py-1 text-xs font-medium text-secondary transition-colors hover:border-accent/40 hover:text-primary;
   }
   .input {
-    @apply w-full rounded-btn border border-border bg-surface px-4 py-3 text-base text-primary placeholder:text-muted outline-none focus:border-accent;
+    @apply w-full rounded-btn border border-border bg-surface px-4 py-3 text-base text-primary placeholder:text-muted outline-none transition-colors focus:border-accent;
   }
   .label {
     @apply text-sm font-medium text-secondary;
@@ -65,7 +66,7 @@ body {
     @apply text-xs font-semibold uppercase tracking-[0.18em] text-accent;
   }
   .nav-link {
-    @apply flex items-center gap-3 rounded-btn px-3 py-2 text-sm font-medium text-secondary transition-colors hover:bg-hover hover:text-primary;
+    @apply flex items-center gap-3 rounded-btn px-3 py-2 text-sm font-medium text-secondary transition-all duration-150 hover:bg-hover hover:text-primary;
   }
   .nav-link-active {
     @apply bg-accent-soft text-primary;
@@ -73,6 +74,67 @@ body {
   .meta {
     @apply text-[11px] uppercase tracking-wider text-muted;
   }
+  /* Gradient text (reactbits-style) along the route gradient */
+  .text-gradient {
+    @apply bg-route bg-clip-text text-transparent;
+  }
+  /* Liquid glass (liquid-glass-js): blur + saturate everywhere; the SVG
+     displacement refraction only where it actually works (desktop pointers). */
+  .glass {
+    background: rgba(13, 18, 32, 0.62);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.06),
+      0 10px 30px rgba(3, 6, 16, 0.35);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+  }
+  @supports (backdrop-filter: url(#liquid-glass)) and (hover: hover) and (pointer: fine) {
+    .glass {
+      backdrop-filter: blur(10px) saturate(150%) url(#liquid-glass);
+      -webkit-backdrop-filter: blur(10px) saturate(150%) url(#liquid-glass);
+    }
+  }
+}
+
+/* Aurora blobs — slow ambient drift behind hero content. Purely decorative:
+   aria-hidden in markup, disabled by the reduced-motion rule below. */
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+  will-change: transform;
+}
+@keyframes aurora-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(4%, -6%, 0) scale(1.08); }
+  66% { transform: translate3d(-5%, 4%, 0) scale(0.95); }
+}
+.animate-aurora {
+  animation: aurora-drift 18s ease-in-out infinite;
+}
+.animate-aurora-slow {
+  animation: aurora-drift 26s ease-in-out infinite reverse;
+}
+
+/* Skeleton / shimmer placeholder */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #141a2b;
+  border-radius: 8px;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(237, 241, 250, 0.07), transparent);
+  animation: shimmer 1.6s infinite;
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
 }
 
 /* Visually-hidden helper for screen readers */
@@ -108,6 +170,6 @@ body {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #273049;
   border-radius: 999px;
 }

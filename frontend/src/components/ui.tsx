@@ -56,8 +56,34 @@ export function EmptyState({ title, body, action }: { title: string; body: strin
 export function LoadingState({ label }: { label?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-accent" />
+      <div className="h-[32px] w-[32px] animate-spin rounded-full border-2 border-border border-t-accent" />
       {label && <p className="mt-4 text-sm text-secondary">{label}</p>}
+    </div>
+  );
+}
+
+/* Shimmer placeholder blocks — show layout while content loads. */
+export function Skeleton({ className = "" }: { className?: string }) {
+  return <div aria-hidden className={`skeleton ${className}`} />;
+}
+
+export function DashboardSkeleton() {
+  return (
+    <div className="mx-auto max-w-5xl space-y-6" role="status" aria-label="Loading dashboard">
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-[256px]" />
+        <Skeleton className="h-4 w-[192px]" />
+      </div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-[96px] rounded-card" />
+        ))}
+      </div>
+      <Skeleton className="h-36 rounded-card" />
+      <div className="grid gap-6 md:grid-cols-2">
+        <Skeleton className="h-56 rounded-card" />
+        <Skeleton className="h-56 rounded-card" />
+      </div>
     </div>
   );
 }
@@ -79,7 +105,7 @@ export function ScoreRing({ value, label, color = "#8B5CF6" }: { value: number; 
   return (
     <div className="flex items-center gap-3">
       <svg width="42" height="42" viewBox="0 0 42 42" className="-rotate-90">
-        <circle cx="21" cy="21" r={r} fill="none" stroke="#27272A" strokeWidth="4" />
+        <circle cx="21" cy="21" r={r} fill="none" stroke="#273049" strokeWidth="4" />
         <circle cx="21" cy="21" r={r} fill="none" stroke={color} strokeWidth="4" strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round" />
       </svg>
       {label && <span className="text-sm font-semibold text-primary">{label}</span>}

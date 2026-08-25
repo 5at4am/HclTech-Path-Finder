@@ -153,7 +153,7 @@ export default function ProfileSetup() {
   return (
     <div className="app-bg flex min-h-screen flex-col">
       <header className="container-page flex items-center gap-2 py-5">
-        <span className="grid h-8 w-8 place-items-center rounded-btn bg-accent text-white"><Compass size={18} /></span>
+        <span className="grid h-[32px] w-[32px] place-items-center rounded-btn bg-route text-white"><Compass size={18} /></span>
         <span className="text-lg font-bold">Pathwise</span>
       </header>
 
@@ -167,7 +167,7 @@ export default function ProfileSetup() {
                   I understand your goal: <span className="text-primary font-medium">{role}</span>
                   {goalAnalysis?.timeline_months ? ` in ${goalAnalysis.timeline_months} months.` : "."} Before I build your path, I need to understand your starting point.
                 </div>
-                <h1 className="mt-6 text-2xl font-bold tracking-tight">{QUESTIONS[step].q}</h1>
+                <h1 className="mt-6 font-display text-2xl font-bold tracking-tight">{QUESTIONS[step].q}</h1>
                 <div className="mt-5 space-y-2">
                   {QUESTIONS[step].options.map((o) => (
                     <button key={o.label} onClick={() => choose(o.value)} className="flex w-full items-center justify-between rounded-btn border border-border bg-surface px-4 py-3 text-left text-primary hover:border-accent/50 hover:bg-hover">
@@ -208,7 +208,7 @@ function Confirmation({ profile, interests, onAddInterest, onRemoveInterest, dra
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <span className="section-eyebrow">Profile summary</span>
-      <h1 className="mt-2 text-2xl font-bold tracking-tight">Here's what I understand about you</h1>
+      <h1 className="mt-2 font-display text-2xl font-bold tracking-tight">Here's what I understand about you</h1>
 
       <div className="mt-5 space-y-3">
         {[["Goal", profile.goal], ["Target role", profile.target_role], ["Timeline", `${profile.timeline_months} months`], ["Study time", `${profile.study_time_per_week} hrs/week`], ["Experience", profile.experience_level]].map(([k, v]) => (

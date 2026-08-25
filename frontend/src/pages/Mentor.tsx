@@ -60,7 +60,7 @@ export default function Mentor() {
   return (
     <div className="mx-auto flex h-[calc(100vh-9rem)] max-w-3xl flex-col">
       <div className="mb-4">
-        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight"><Sparkles size={20} className="text-accent" /> AI Mentor</h1>
+        <h1 className="flex items-center gap-2 font-display text-2xl font-bold tracking-tight"><Sparkles size={20} className="text-accent" /> AI Mentor</h1>
         <p className="text-secondary">Contextual answers grounded in your actual path and progress.</p>
       </div>
 
@@ -76,7 +76,7 @@ export default function Mentor() {
         <AnimatePresence initial={false}>
           {messages.map((m, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-              <div className={`max-w-[80%] rounded-card px-4 py-3 text-sm ${m.role === "user" ? "bg-accent text-white" : "bg-elevated text-primary"}`}>
+              <div className={`max-w-[80%] rounded-card px-4 py-3 text-sm leading-relaxed ${m.role === "user" ? "rounded-br-sm bg-accent text-white" : "rounded-bl-sm bg-elevated text-primary"}`}>
                 {m.content}
               </div>
             </motion.div>

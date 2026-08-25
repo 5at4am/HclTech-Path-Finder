@@ -51,21 +51,27 @@ export default function Analyzing() {
     <div className="app-bg grid min-h-screen place-items-center">
       <div className="w-full max-w-md px-6">
         <div className="mb-8 flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-btn bg-accent text-white"><Compass size={18} /></span>
-          <span className="text-lg font-bold">Pathwise</span>
+          <span className="grid h-[32px] w-[32px] place-items-center rounded-btn bg-route text-white"><Compass size={18} /></span>
+          <span className="font-display text-lg font-bold tracking-tight">Pathwise</span>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">Mapping your route</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Mapping your route</h1>
         <p className="mt-2 text-secondary">We're turning your goal into a sequenced learning path.</p>
 
         <ul className="mt-8 space-y-3">
           {STAGES.map((s, i) => (
-            <li key={s} className="flex items-center gap-3">
+            <motion.li
+              key={s}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.08, duration: 0.35 }}
+              className="flex items-center gap-3"
+            >
               <span className={`grid h-6 w-6 place-items-center rounded-full border ${done[i] ? "border-success bg-success/15 text-success" : "border-border text-muted"}`}>
                 {done[i] ? <Check size={14} /> : (i === STAGES.length - 1 && done[STAGES.length - 2] ? <Loader2 size={14} className="animate-spin" /> : null)}
               </span>
               <span className={done[i] ? "text-primary" : "text-muted"}>{s}</span>
               {done[i] && i < STAGES.length - 1 && <span className="ml-auto text-xs text-success">✓</span>}
-            </li>
+            </motion.li>
           ))}
         </ul>
 

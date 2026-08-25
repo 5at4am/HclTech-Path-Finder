@@ -5,7 +5,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } fro
 import { ArrowRight } from "lucide-react";
 import { api } from "../lib/api";
 import { useApp } from "../lib/store";
-import { SkillBar, ErrorState } from "../components/ui";
+import { SkillBar, ErrorState, LoadingState } from "../components/ui";
 
 export default function Skills() {
   const { learnerId } = useApp();
@@ -25,7 +25,7 @@ export default function Skills() {
       action={<button onClick={() => refetch()} className="btn-primary">Retry</button>}
     />
   );
-  if (isLoading || !data) return <div className="py-20 text-center text-muted">Loading skills…</div>;
+  if (isLoading || !data) return <LoadingState label="Loading skills…" />;
 
   const skills = data.skills;
   const chartData = skills.map((s) => ({ skill: s.skill.replace(/_/g, " "), level: s.level }));
@@ -33,7 +33,7 @@ export default function Skills() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Your skills</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Your skills</h1>
         <p className="text-secondary">Where you are today, and what your goal requires.</p>
       </div>
 
@@ -47,11 +47,11 @@ export default function Skills() {
 
         <section className="card p-5">
           <h3 className="mb-2 font-semibold">Coverage</h3>
-          <div className="h-64 w-full">
+          <div className="h-[256px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={chartData} outerRadius="75%">
-                <PolarGrid stroke="#27272A" />
-                <PolarAngleAxis dataKey="skill" tick={{ fill: "#A1A1AA", fontSize: 11 }} />
+                <PolarGrid stroke="#273049" />
+                <PolarAngleAxis dataKey="skill" tick={{ fill: "#9AA6BF", fontSize: 11 }} />
                 <Radar dataKey="level" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.35} />
               </RadarChart>
             </ResponsiveContainer>

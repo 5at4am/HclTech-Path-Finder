@@ -100,7 +100,7 @@ export default function Path() {
       <main className="container-page grid gap-8 pb-16 lg:grid-cols-[1fr_320px]">
         <div>
           <span className="section-eyebrow">Your personalized path</span>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">{path.target_role}</h1>
+          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">{path.target_role}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-secondary">
             <span>{path.timeline_months} months</span>
             <span className="text-border">·</span>
@@ -207,7 +207,7 @@ function WhatIf({ learnerId, currentStudy, open }: { learnerId: string; currentS
       <p className="mt-1 text-xs text-muted">See how your path adapts without changing your real plan.</p>
       <div className="mt-3 flex items-center gap-2">
         <input type="range" min={1} max={20} value={study} onChange={(e) => setStudy(+e.target.value)} className="flex-1 accent-accent" />
-        <span className="w-20 text-right text-sm text-secondary">{study} hrs/wk</span>
+        <span className="w-[80px] text-right text-sm text-secondary">{study} hrs/wk</span>
       </div>
       <button onClick={run} disabled={load} className="btn-subtle mt-3 w-full">{load ? "Simulating…" : "Run simulation"}</button>
       {sim && (

@@ -41,8 +41,8 @@ export default function Onboarding() {
     <div className="app-bg flex min-h-screen flex-col">
       <header className="container-page flex items-center justify-between py-5">
         <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-btn bg-accent text-white"><Compass size={18} /></span>
-          <span className="text-lg font-bold">Pathwise</span>
+          <span className="grid h-[32px] w-[32px] place-items-center rounded-btn bg-route text-white"><Compass size={18} /></span>
+          <span className="font-display text-lg font-bold tracking-tight">Pathwise</span>
         </div>
         <Link to="/" className="text-sm text-secondary hover:text-primary">Cancel</Link>
       </header>
@@ -55,7 +55,7 @@ export default function Onboarding() {
           className="w-full max-w-2xl"
         >
           <span className="section-eyebrow">Onboarding</span>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight">Where do you want to go?</h1>
+          <h1 className="mt-3 font-display text-4xl font-bold tracking-tight">Where do you want to go?</h1>
           <p className="mt-3 text-secondary">
             Tell me what you're trying to achieve. You don't need to know what to learn yet.
           </p>
@@ -81,9 +81,14 @@ export default function Onboarding() {
             <p className="meta mb-2">Try an example</p>
             <div className="flex flex-wrap gap-2">
               {EXAMPLES.map((ex) => (
-                <button key={ex} onClick={() => submit(ex)} className="pill hover:border-accent/50 hover:text-primary">
+                <motion.button
+                  key={ex}
+                  onClick={() => submit(ex)}
+                  whileTap={{ scale: 0.96 }}
+                  className="pill hover:border-accent/50 hover:text-primary"
+                >
                   <Sparkles size={12} /> {ex}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>

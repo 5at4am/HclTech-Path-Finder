@@ -51,7 +51,7 @@ export default function LearningPath({
             )}
             <span
               className={cx(
-                "absolute left-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border border-border",
+                "absolute left-2 top-2 flex h-[32px] w-[32px] items-center justify-center rounded-full border border-border",
                 STATUS_DOT[step.status] || STATUS_DOT.locked
               )}
               aria-hidden

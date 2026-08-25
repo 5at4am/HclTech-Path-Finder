@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Loader2 } from "lucide-react";
 import { api } from "../lib/api";
 import { useApp } from "../lib/store";
 import { ResourceCard } from "../components/ResourceCard";
-import { EmptyState, ErrorState } from "../components/ui";
+import { EmptyState, ErrorState, LoadingState } from "../components/ui";
 
 type Tab = "recommended" | "courses" | "projects" | "saved";
 
@@ -52,7 +51,7 @@ export default function Courses() {
       action={<button onClick={() => refetch()} className="btn-primary">Retry</button>}
     />
   );
-  if (isLoading || !data) return <div className="py-20 text-center text-muted"><Loader2 className="mx-auto animate-spin text-accent" /></div>;
+  if (isLoading || !data) return <LoadingState label="Loading recommendations…" />;
 
   const recs = data.recommendations;
   const filtered = tab === "recommended" ? recs
@@ -65,7 +64,7 @@ export default function Courses() {
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Courses & resources</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Courses & resources</h1>
         <p className="text-secondary">Recommended from your profile and goal.</p>
       </div>
 
