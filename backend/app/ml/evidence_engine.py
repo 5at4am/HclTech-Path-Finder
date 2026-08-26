@@ -28,6 +28,33 @@ ROOT = BASE.parents[2]  # repo root (D:\CODE\HCL\PathFinder)
 DATA_FILE = ROOT / "Data" / "train.csv"
 SIG_CACHE = BASE / "signature_bank.json"
 MODEL_CACHE = BASE / "_evidence_cache.pkl"
+CATALOG_CACHE = BASE / "_catalog_cache.json"
+
+# Domain affinity map: which domains are considered "related" for peer course suggestions
+DOMAIN_AFFINITY: dict[str, set[str]] = {
+    "Frontend": {"Frontend", "Full Stack", "Mobile", "Programming Languages"},
+    "Backend": {"Backend", "Full Stack", "Databases", "DevOps", "Cloud", "Programming Languages"},
+    "Full Stack": {"Frontend", "Backend", "Full Stack", "Databases", "DevOps", "Programming Languages"},
+    "Mobile": {"Mobile", "Frontend", "Programming Languages"},
+    "DevOps": {"DevOps", "Cloud", "Systems", "Backend", "MLOps", "Data Engineering"},
+    "Cloud": {"Cloud", "DevOps", "Backend", "Data Engineering"},
+    "Systems": {"Systems", "DevOps", "Programming Languages"},
+    "Databases": {"Databases", "Backend", "Data Engineering", "Data Analysis", "Data Science"},
+    "Data Engineering": {"Data Engineering", "Databases", "Cloud", "DevOps", "Data Science", "Data Analysis"},
+    "Data Science": {"Data Science", "Data Engineering", "Machine Learning", "Statistics", "Data Analysis", "Visualization"},
+    "Data Analysis": {"Data Analysis", "Data Science", "Visualization", "Statistics", "Databases"},
+    "Machine Learning": {"Machine Learning", "Deep Learning", "Data Science", "MLOps", "NLP", "Computer Vision", "Generative AI"},
+    "Deep Learning": {"Deep Learning", "Machine Learning", "Computer Vision", "NLP", "Generative AI", "MLOps"},
+    "MLOps": {"MLOps", "Machine Learning", "Deep Learning", "DevOps", "Data Engineering", "Cloud"},
+    "NLP": {"NLP", "Machine Learning", "Deep Learning", "Generative AI", "Data Science"},
+    "Computer Vision": {"Computer Vision", "Deep Learning", "Machine Learning", "Generative AI"},
+    "Generative AI": {"Generative AI", "Machine Learning", "Deep Learning", "NLP", "Data Science"},
+    "Statistics": {"Statistics", "Data Science", "Data Analysis", "Machine Learning"},
+    "Visualization": {"Visualization", "Data Analysis", "Data Science", "Frontend"},
+    "Security": {"Security", "DevOps", "Backend", "Systems", "Blockchain"},
+    "Blockchain": {"Blockchain", "Security", "Backend", "Programming Languages"},
+    "Programming Languages": {"Programming Languages", "Frontend", "Backend", "Mobile", "Data Science", "Machine Learning"},
+}
 
 
 def _model_dir():
@@ -39,6 +66,24 @@ def _model_dir():
         if (cand / "solution.py").exists():
             return cand
     return ROOT / "Model"
+
+
+_COURSE_DOMAIN_CACHE: dict[str, str] | None = None
+
+
+def _load_course_domains() -> dict[str, str]:
+    """Load course->domain mapping from the catalog cache."""
+    global _COURSE_DOMAIN_CACHE
+    if _COURSE_DOMAIN_CACHE is not None:
+        return _COURSE_DOMAIN_CACHE
+    try:
+        raw = json.loads(CATALOG_CACHE.read_text(encoding="utf-8"))
+        catalog = raw.get("catalog", [])
+        mapping = {c["title"]: c["domain"] for c in catalog if c.get("title") and c.get("domain")}
+        _COURSE_DOMAIN_CACHE = mapping
+        return mapping
+    except (OSError, ValueError, KeyError, TypeError):
+        return {}
 
 
 _MDIR = _model_dir()
@@ -191,9 +236,20 @@ def explain(query_doc: str, course_name: str, k: int = 5):
         ranked = rank_neighbors(
             qv, eng["centroids"], list(range(len(eng["course_names"])))
         )[0]
-        peer_courses = [
+        all_peers = [
             eng["course_names"][i] for i in ranked if i != cidx
-        ][:k]
+        ]
+
+        course_domains = _load_course_domains()
+        target_domain = course_domains.get(course_name, "")
+        if target_domain:
+            allowed_domains = DOMAIN_AFFINITY.get(target_domain, {target_domain})
+            peer_courses = [
+                p for p in all_peers
+                if course_domains.get(p, "") in allowed_domains
+            ][:k]
+        else:
+            peer_courses = all_peers[:k]
 
     return Evidence(
         course_signatures=sigs[:8],
