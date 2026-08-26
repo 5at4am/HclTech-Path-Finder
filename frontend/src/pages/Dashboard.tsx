@@ -1,157 +1,215 @@
-import { useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
-import { ArrowRight, Flame, Clock, Target, TrendingUp, ListChecks } from "lucide-react";
-import { api } from "../lib/api";
-import { useApp } from "../lib/store";
-import { SkillBar, cx, ErrorState, DashboardSkeleton, CountUp } from "../components/ui";
-import type { DashboardResponse } from "../lib/types";
+import { Compass, GitBranch, Lightbulb, MessagesSquare, PlayCircle, TrendingUp } from "lucide-react";
+import { useLearner } from "../store/useLearner";
+import { useDashboard, useRecommendations, useGeneratePath } from "../lib/hooks";
+import {
+  Button,
+  Card,
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  SectionHeader,
+  Skeleton,
+  cx,
+} from "../components/ui";
+import { ResourceCard, RecommendationCard, SkillGapCard } from "../components/product.cards";
+import { ProgressBar } from "../components/ui";
 
-export default function Dashboard() {
-  const { learnerId } = useApp();
+export function Dashboard() {
+  const { learnerId } = useLearner();
   const navigate = useNavigate();
-  useEffect(() => { if (!learnerId) navigate("/onboarding"); }, [learnerId, navigate]);
+  const { data, isLoading, isError, error, refetch } = useDashboard(learnerId);
+  const recs = useRecommendations(learnerId);
+  const generate = useGeneratePath(learnerId);
 
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["dashboard", learnerId],
-    queryFn: () => api.dashboard(learnerId!),
-    enabled: !!learnerId,
-  });
+  if (isLoading) return <DashboardSkeleton />;
+  if (isError)
+    return (
+      <ErrorState
+        description={error instanceof Error ? error.message : undefined}
+        onRetry={() => refetch()}
+      />
+    );
+  if (!data) return null;
 
-  if (!learnerId) return null;
-  if (isError) return (
-    <ErrorState
-      title="We couldn't load your dashboard."
-      body="Make sure the backend is running on port 8000, then try again."
-      action={<button onClick={() => refetch()} className="btn-primary">Retry</button>}
-    />
-  );
-  if (isLoading || !data) return <DashboardSkeleton />;
-
-  const d = data as DashboardResponse;
+  if (!data.path_id) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <PageHeader eyebrow="Dashboard" title="No learning path yet" />
+        <EmptyState
+          title="Define your goal and Astrolabe will create your personalized path."
+          description="Your path is selected deterministically from your goal, skills, and the evidence base."
+          action={
+            <Button loading={generate.isPending} onClick={() => generate.mutateAsync().then(() => refetch())}>
+              Build my path
+            </Button>
+          }
+          icon={<GitBranch size={28} />}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight">Welcome back, {d.name}</h1>
-        <p className="text-secondary">You're working toward <span className="text-primary font-medium">{d.target_role}</span></p>
-        {d.interests?.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {d.interests.map((it: string) => (
-              <span key={it} className="pill">{it}</span>
-            ))}
+    <div>
+      <PageHeader
+        eyebrow="Dashboard"
+        title={
+          <span>
+            {data.name ? `${data.name}'s navigation` : "Your navigation"}
+          </span>
+        }
+        description={data.goal}
+        actions={
+          <Button variant="secondary" onClick={() => navigate("/path")}>
+            <GitBranch size={16} /> Open path
+          </Button>
+        }
+      />
+
+      {/* Quick stats */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <Stat label="Path progress" value={`${data.path_complete_pct}%`} icon={<TrendingUp size={16} className="text-brand" />} />
+        <Stat label="Skills covered" value={data.skills_covered} icon={<Compass size={16} className="text-brand" />} />
+        <Stat label="Active days" value={String(data.streak_days)} icon={<PlayCircle size={16} className="text-brand" />} />
+        <Stat label="Hours this week" value={String(data.hours_this_week)} icon={<TrendingUp size={16} className="text-brand" />} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        {/* Primary: continue + next actions */}
+        <section className="space-y-6">
+          <div>
+            <SectionHeader title="Continue where you left off" />
+            {data.continue_resource ? (
+              <ResourceCard
+                resource={data.continue_resource}
+                footer={
+                  <div className="flex items-center gap-3">
+                    <ProgressBar value={data.continue_pct} className="flex-1" />
+                    <span className="text-caption text-muted tabular-nums">{data.continue_pct}%</span>
+                  </div>
+                }
+              />
+            ) : (
+              <Card className="text-body-sm text-secondary">
+                Your path is complete — explore electives or review.
+              </Card>
+            )}
           </div>
-        )}
-      </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Metric delay={0} icon={<Target size={16} />} label="Path complete" value={`${d.path_complete_pct}%`} />
-        <Metric delay={0.06} icon={<TrendingUp size={16} />} label="Skills covered" value={d.skills_covered} />
-        <Metric delay={0.12} icon={<Flame size={16} />} label="Learning streak" value={`${d.streak_days} days`} />
-        <Metric delay={0.18} icon={<Clock size={16} />} label="This week" value={`${d.hours_this_week} hrs`} />
-      </div>
+          <div>
+            <SectionHeader title="What to do next" />
+            <Card className="bg-surface-secondary">
+              <ul className="space-y-2">
+                {data.next_actions.map((a, i) => (
+                  <li key={i} className="flex items-start gap-2 text-body-sm text-secondary">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand shrink-0" />
+                    {a}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </div>
+        </section>
 
-      {d.continue_resource && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-card border border-accent-soft bg-elevated p-5">
-          <p className="meta">Continue your path</p>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold text-primary">{d.continue_resource.title}</h2>
-              <div className="mt-2 h-2 w-64 max-w-full overflow-hidden rounded-full bg-border">
-                <motion.div
-                  className="h-2 rounded-full bg-accent"
-                  style={{ width: `${d.continue_pct}%`, transformOrigin: "left" }}
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ duration: 0.9, delay: 0.2, ease: [0.21, 0.65, 0.36, 1] }}
+        {/* Secondary: skill gap + mentor */}
+        <section className="space-y-6">
+          <div>
+            <SectionHeader
+              title="Priority skill gaps"
+              action={
+                <Button variant="ghost" size="sm" onClick={() => navigate("/skill-gap")}>
+                  View all
+                </Button>
+              }
+            />
+            <div className="space-y-3">
+              {data.priority_gaps.length === 0 && (
+                <Card className="text-body-sm text-secondary">No major gaps detected.</Card>
+              )}
+              {data.priority_gaps.slice(0, 3).map((g) => (
+                <SkillGapCard
+                  key={g.skill}
+                  skill={g.skill}
+                  level={g.current_level}
+                  required={g.current_level + g.gap}
+                  gap={g.gap}
                 />
-              </div>
-              <p className="mt-1 text-xs tabular-nums text-muted">{d.continue_pct}% · {d.continue_remaining_hours} hrs remaining</p>
+              ))}
             </div>
-            <button onClick={() => navigate("/path")} className="btn-primary">Continue learning <ArrowRight size={16} /></button>
           </div>
-        </motion.div>
-      )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <section className="card p-5">
-          <div className="mb-3 flex items-center gap-2"><ListChecks size={16} className="text-accent" /><h3 className="font-semibold">Next actions</h3></div>
-          <ul className="space-y-2">
-            {d.next_actions.map((a, i) => (
-              <motion.li
-                key={i}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.15 + i * 0.07, duration: 0.35 }}
-                className="flex items-center gap-2 rounded-btn bg-surface px-3 py-2 text-sm text-primary"
-              >
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-accent-soft text-[11px] font-semibold tabular-nums text-accent">{i + 1}</span>
-                {a}
-              </motion.li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="card p-5">
-          <h3 className="mb-3 font-semibold">Skill development</h3>
-          <div className="space-y-3">
-            {d.skills.slice(0, 6).map((s) => (
-              <SkillBar key={s.skill} label={s.skill} level={s.level} required={s.required} />
-            ))}
+          <div>
+            <SectionHeader title="Mentor" />
+            <Card className="flex items-center gap-3">
+              <MessagesSquare size={20} className="text-brand" />
+              <div className="flex-1">
+                <p className="text-body-sm text-primary">Ask about your path</p>
+                <p className="text-caption text-muted">Contextual, grounded in your progress.</p>
+              </div>
+              <Button size="sm" onClick={() => navigate("/mentor")}>
+                Open
+              </Button>
+            </Card>
           </div>
-          <button onClick={() => navigate("/skills")} className="btn-subtle mt-4 w-full">View all skills</button>
         </section>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-          <section className="card p-5">
-            <h3 className="mb-3 font-semibold text-signal">Priority gaps</h3>
-          <ol className="space-y-2">
-            {d.priority_gaps.map((g, i) => (
-              <li key={g.skill} className="flex items-center gap-3 text-sm">
-                <span className="grid h-6 w-6 place-items-center rounded-full bg-warning/15 text-xs font-bold text-warning">{String(i + 1).padStart(2, "0")}</span>
-                <span className="capitalize text-primary">{g.skill.replace(/_/g, " ")}</span>
-                <span className="ml-auto text-xs text-muted">now {g.current_level}%</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="card p-5">
-          <h3 className="mb-3 font-semibold">Recent feedback</h3>
-          {d.recent_feedback.length === 0 ? (
-            <p className="text-sm text-muted">No feedback yet. Rate recommendations to adapt your path.</p>
-          ) : (
-            <ul className="space-y-2 text-sm">
-              {d.recent_feedback.map((f, i) => (
-                <li key={i} className="flex items-center justify-between rounded-btn bg-surface px-3 py-2">
-                  <span className="text-secondary">{f.resource_id}</span>
-                  <span className={cx("text-xs", f.helpful ? "text-success" : "text-warning")}>{f.helpful ? "Helpful" : f.reason || "Not useful"}</span>
-                </li>
-              ))}
-            </ul>
+      {/* Evidence-backed recommendations */}
+      <div className="mt-10">
+        <SectionHeader
+          title="Evidence-backed recommendations"
+          description="A preview — see the full reasoning on the Recommendations page."
+          action={
+            <Button variant="ghost" size="sm" onClick={() => navigate("/recommendations")}>
+              <Lightbulb size={14} /> All recommendations
+            </Button>
+          }
+        />
+        <div className="grid gap-4 md:grid-cols-2">
+          {(recs.data?.recommendations ?? []).slice(0, 2).map((r) => (
+            <RecommendationCard key={r.resource.id} rec={r} />
+          ))}
+          {recs.isLoading && (
+            <>
+              <Skeleton className="h-64" />
+              <Skeleton className="h-64" />
+            </>
           )}
-        </section>
+          {!recs.isLoading && (recs.data?.recommendations.length ?? 0) === 0 && (
+            <Card className="text-body-sm text-secondary md:col-span-2">
+              No recommendations yet.
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function Metric({ icon, label, value, delay = 0 }: { icon: ReactNode; label: string; value: string; delay?: number }) {
-  // Split a leading integer off so it can tick up ("42%" → CountUp + "%").
-  const match = value.match(/^(\d+)(.*)$/);
+function Stat({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
   return (
-    <motion.div
-      className="card p-4 transition-colors duration-200 hover:border-accent-soft"
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay, ease: [0.21, 0.65, 0.36, 1] }}
-    >
-      <div className="flex items-center gap-2 text-muted">{icon}<span className="text-xs">{label}</span></div>
-      <p className="mt-2 text-2xl font-bold tracking-tight tabular-nums">
-        {match ? (<><CountUp value={parseInt(match[1], 10)} />{match[2]}</>) : value}
-      </p>
-    </motion.div>
+    <Card className={cx("flex items-center gap-3")}>
+      <div className="grid h-9 w-9 place-items-center rounded-md bg-brand-soft">{icon}</div>
+      <div>
+        <p className="text-caption text-muted">{label}</p>
+        <p className="text-title text-primary tabular-nums">{value}</p>
+      </div>
+    </Card>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-16 w-1/2" />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-20" />
+        ))}
+      </div>
+      <Skeleton className="h-40" />
+      <Skeleton className="h-40" />
+    </div>
   );
 }

@@ -5,9 +5,10 @@ import { BrowserRouter } from "react-router-dom";
 import { MotionConfig } from "framer-motion";
 import App from "./App";
 import "./index.css";
+import "./store/useLearner"; // initializes theme on load
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 30_000 } },
 });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -19,5 +20,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         </BrowserRouter>
       </MotionConfig>
     </QueryClientProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

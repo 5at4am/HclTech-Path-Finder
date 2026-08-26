@@ -1,183 +1,285 @@
-import { useEffect, useRef, type ReactNode, type MouseEvent } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import type { Evidence } from "../lib/types";
+import React from "react";
+import { Loader2 } from "lucide-react";
 
-export function cx(...parts: (string | false | null | undefined)[]) {
+export function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");
 }
 
-/* SpotlightCard — Aceternity/Magic-UI-style cursor spotlight (zero-dep).
-   A radial glow tracks the pointer via CSS custom properties. */
-export function SpotlightCard({ children, className = "" }: { children: ReactNode; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  function onMove(e: MouseEvent<HTMLDivElement>) {
-    const el = ref.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    el.style.setProperty("--mx", `${e.clientX - r.left}px`);
-    el.style.setProperty("--my", `${e.clientY - r.top}px`);
-  }
+/* ---------------------------------- Button --------------------------------- */
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "primary" | "secondary" | "ghost" | "accent";
+  size?: "sm" | "md" | "lg";
+  icon?: boolean;
+  loading?: boolean;
+};
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant = "primary", size = "md", icon = false, loading, className, children, disabled, ...p }, ref) => (
+    <button
+      ref={ref}
+      disabled={disabled || loading}
+      className={cx(
+        "btn",
+        variant === "primary" && "btn-primary",
+        variant === "secondary" && "btn-secondary",
+        variant === "ghost" && "btn-ghost",
+        variant === "accent" && "btn-accent",
+        size === "sm" && "btn-sm",
+        size === "lg" && "btn-lg",
+        icon && "btn-icon",
+        className,
+      )}
+      {...p}
+    >
+      {loading && <Loader2 size={16} className="animate-spin" />}
+      {children}
+    </button>
+  ),
+);
+Button.displayName = "Button";
+
+/* ---------------------------------- Input ---------------------------------- */
+type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  invalid?: boolean;
+  valid?: boolean;
+};
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ invalid, valid, className, ...p }, ref) => (
+    <input
+      ref={ref}
+      className={cx("input", invalid && "input-error", valid && "input-success", className)}
+      {...p}
+    />
+  ),
+);
+Input.displayName = "Input";
+
+export const Textarea = React.forwardRef<
+  HTMLTextAreaElement,
+  React.TextareaHTMLAttributes<HTMLTextAreaElement> & { invalid?: boolean; valid?: boolean }
+>(({ invalid, valid, className, ...p }, ref) => (
+  <textarea
+    ref={ref}
+    className={cx("textarea", invalid && "textarea-error", valid && "textarea-success", className)}
+    {...p}
+  />
+));
+Textarea.displayName = "Textarea";
+
+type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean };
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
+  ({ invalid, className, children, ...p }, ref) => (
+    <select ref={ref} className={cx("select", invalid && "select-error", className)} {...p}>
+      {children}
+    </select>
+  ),
+);
+Select.displayName = "Select";
+
+/* ---------------------------------- Badge ---------------------------------- */
+type BadgeTone = "brand" | "accent" | "success" | "warning" | "error" | "info" | "neutral";
+export function Badge({
+  tone = "neutral",
+  children,
+  className,
+}: {
+  tone?: BadgeTone;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div ref={ref} onMouseMove={onMove} className={`spotlight-card ${className}`}>
+    <span
+      className={cx(
+        "badge",
+        tone === "brand" && "badge-brand",
+        tone === "accent" && "badge-accent",
+        tone === "success" && "badge-success",
+        tone === "warning" && "badge-warning",
+        tone === "error" && "badge-error",
+        tone === "info" && "badge-info",
+        tone === "neutral" && "border-subtle bg-surface text-secondary",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+/* ----------------------------------- Card ---------------------------------- */
+export function Card({
+  className,
+  interactive,
+  children,
+  ...p
+}: React.HTMLAttributes<HTMLDivElement> & { interactive?: boolean }) {
+  return (
+    <div className={cx("card", interactive && "card-interactive", "p-5", className)} {...p}>
       {children}
     </div>
   );
 }
 
-/* Number ticker — digits count up to `value` on mount/change (animation-vocabulary:
-   "number ticker"). Render with tabular-nums to keep width stable. */
-export function CountUp({ value }: { value: number }) {
-  const mv = useMotionValue(0);
-  const rounded = useTransform(mv, (v) => Math.round(v).toString());
-  useEffect(() => {
-    const controls = animate(mv, value, { duration: 0.9, ease: [0.21, 0.65, 0.36, 1] });
-    return () => controls.stop();
-  }, [value, mv]);
-  return <motion.span>{rounded}</motion.span>;
-}
-
-const STATUS_STYLES: Record<string, string> = {
-  completed: "bg-success/15 text-success border-success/30",
-  current: "bg-accent-soft text-accent border-accent-soft",
-  recommended: "bg-info/10 text-info border-info/25",
-  locked: "bg-surface text-muted border-border",
-  optional: "bg-warning/10 text-warning border-warning/25",
-};
-
-export function StatusBadge({ status }: { status: string }) {
-  const label = status.charAt(0).toUpperCase() + status.slice(1);
+/* -------------------------------- Progress --------------------------------- */
+export function ProgressBar({
+  value,
+  tone = "brand",
+  className,
+  showLabel = false,
+}: {
+  value: number;
+  tone?: "brand" | "accent" | "success";
+  className?: string;
+  showLabel?: boolean;
+}) {
+  const pct = Math.max(0, Math.min(100, Math.round(value)));
+  const color =
+    tone === "accent" ? "var(--color-accent)" : tone === "success" ? "var(--color-success)" : "var(--color-brand)";
   return (
-    <span className={cx("inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold", STATUS_STYLES[status] || STATUS_STYLES.locked)}>
-      {label}
-    </span>
-  );
-}
-
-/* EvidencePanel — the product's signature element. A teal left rule (not a full
-   border) plus a monospace quote marks "retrieved from data", distinct from
-   narrated prose. The quote is built from real review signatures; the citation
-   below is a single small-caps line. Deliberately quiet: no icons, badges, or
-   extra chrome. Reused identically in the mentor, path detail, and recommendations. */
-export function EvidencePanel({ evidence, className = "" }: { evidence: Evidence | null; className?: string }) {
-  if (!evidence) return null;
-  const { course_signatures, similarity, peer_courses, source } = evidence;
-  if (!course_signatures.length && !peer_courses.length) return null;
-  const citation = [
-    peer_courses.length ? `matched in ${peer_courses.length} learner review${peer_courses.length === 1 ? "" : "s"}` : "from learner reviews",
-    similarity > 0 ? `${Math.round(similarity * 100)}% similarity` : null,
-    source ? source : null,
-  ].filter(Boolean).join(" · ");
-  return (
-    <figure className={cx("border-l-2 border-accent pl-4", className)}>
-      <blockquote className="space-y-1.5 font-mono text-sm leading-relaxed text-primary">
-        {course_signatures.slice(0, 3).map((s, i) => (
-          <span key={i}>{s}</span>
-        ))}
-      </blockquote>
-      <figcaption className="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">{citation}</figcaption>
-    </figure>
-  );
-}
-
-export function SkillBar({ label, level, required, gap }: { label: string; level: number; required?: number; gap?: number }) {
-  const pct = Math.max(0, Math.min(100, level));
-  const reqPct = required ? Math.max(0, Math.min(100, required)) : null;
-  return (
-    <div>
-      <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="text-sm font-medium text-primary">{label.replace(/_/g, " ")}</span>
-        <span className="text-xs font-semibold text-secondary tabular-nums">{pct}%</span>
-      </div>
-      <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-border">
-        <motion.div
-          className="absolute inset-y-0 left-0 rounded-full bg-progress"
-          style={{ width: `${pct}%`, transformOrigin: "left" }}
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.9, ease: [0.21, 0.65, 0.36, 1] }}
+    <div className={cx("w-full", className)}>
+      <div className="h-2 w-full rounded-full bg-surface-tertiary overflow-hidden">
+        <div
+          className="h-full rounded-full transition-[width] duration-slow"
+          style={{ width: `${pct}%`, background: color }}
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
         />
-        {reqPct !== null && (
-          <div className="absolute inset-y-0 w-0.5 bg-signal" style={{ left: `${reqPct}%` }} title="Required level" />
-        )}
       </div>
-      {gap !== undefined && gap > 0 && (
-        <p className="mt-1 text-[11px] text-muted">gap {gap} pts to target</p>
+      {showLabel && <span className="meta mt-1 block">{pct}%</span>}
+    </div>
+  );
+}
+
+/* -------------------------------- Skeleton --------------------------------- */
+export function Skeleton({ className }: { className?: string }) {
+  return <div className={cx("skeleton rounded-md", className)} />;
+}
+
+/* ------------------------------ Empty / Error ------------------------------ */
+export function EmptyState({
+  title,
+  description,
+  action,
+  icon,
+}: {
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center gap-3 py-16 px-6 border border-dashed border-strong rounded-panel bg-surface">
+      {icon && <div className="text-muted">{icon}</div>}
+      <h3 className="text-heading-sm text-primary">{title}</h3>
+      {description && <p className="text-body-sm text-secondary max-w-md">{description}</p>}
+      {action && <div className="mt-2">{action}</div>}
+    </div>
+  );
+}
+
+export function ErrorState({
+  title = "Something went wrong.",
+  description,
+  onRetry,
+}: {
+  title?: string;
+  description?: string;
+  onRetry?: () => void;
+}) {
+  return (
+    <div className="alert alert-error flex-col items-start gap-2">
+      <div className="flex items-center gap-2 font-semibold text-primary">
+        <span className="status-error">●</span>
+        {title}
+      </div>
+      {description && <p className="text-body-sm text-secondary">{description}</p>}
+      {onRetry && (
+        <button className="btn btn-secondary btn-sm mt-1" onClick={onRetry}>
+          Try again
+        </button>
       )}
     </div>
   );
 }
 
-export function EmptyState({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
+/* ------------------------------ Page / Section ----------------------------- */
+export function PageHeader({
+  eyebrow,
+  title,
+  description,
+  actions,
+}: {
+  eyebrow?: React.ReactNode;
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  actions?: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-card border border-dashed border-border bg-surface px-6 py-14 text-center">
-      <h3 className="text-lg font-semibold text-primary">{title}</h3>
-      <p className="mt-2 max-w-sm text-sm text-secondary">{body}</p>
-      {action && <div className="mt-5">{action}</div>}
-    </div>
-  );
-}
-
-export function LoadingState({ label }: { label?: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="h-[32px] w-[32px] animate-spin rounded-full border-2 border-border border-t-accent" />
-      {label && <p className="mt-4 text-sm text-secondary">{label}</p>}
-    </div>
-  );
-}
-
-/* Shimmer placeholder blocks — show layout while content loads. */
-export function Skeleton({ className = "" }: { className?: string }) {
-  return <div aria-hidden className={`skeleton ${className}`} />;
-}
-
-export function DashboardSkeleton() {
-  return (
-    <div className="mx-auto max-w-5xl space-y-6" role="status" aria-label="Loading dashboard">
-      <div className="space-y-2">
-        <Skeleton className="h-7 w-[256px]" />
-        <Skeleton className="h-4 w-[192px]" />
+    <header className="flex flex-col gap-4 mb-8 md:flex-row md:items-end md:justify-between">
+      <div className="max-w-2xl">
+        {eyebrow && <div className="section-eyebrow mb-2">{eyebrow}</div>}
+        <h1 className="text-heading-lg text-primary">{title}</h1>
+        {description && <p className="text-body text-secondary mt-2">{description}</p>}
       </div>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-[96px] rounded-card" />
-        ))}
-      </div>
-      <Skeleton className="h-36 rounded-card" />
-      <div className="grid gap-6 md:grid-cols-2">
-        <Skeleton className="h-56 rounded-card" />
-        <Skeleton className="h-56 rounded-card" />
-      </div>
-    </div>
+      {actions && <div className="flex gap-2 flex-wrap">{actions}</div>}
+    </header>
   );
 }
 
-export function ErrorState({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
+export function SectionHeader({
+  title,
+  description,
+  action,
+}: {
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  action?: React.ReactNode;
+}) {
   return (
-    <div className="rounded-card border border-error/30 bg-error/5 px-6 py-10 text-center">
-      <h3 className="text-lg font-semibold text-error">{title}</h3>
-      <p className="mt-2 text-sm text-secondary">{body}</p>
-      {action && <div className="mt-5">{action}</div>}
+    <div className="flex items-end justify-between gap-4 mb-4">
+      <div>
+        <h2 className="text-heading-sm text-primary">{title}</h2>
+        {description && <p className="text-body-sm text-secondary mt-1">{description}</p>}
+      </div>
+      {action}
     </div>
   );
 }
 
-export function ScoreRing({ value, label, color = "var(--color-brand)" }: { value: number; label?: string; color?: string }) {
-  const r = 16;
-  const c = 2 * Math.PI * r;
-  const off = c * (1 - Math.max(0, Math.min(1, value)));
+/* ---------------------------------- Tabs ----------------------------------- */
+export function Tabs<T extends string>({
+  tabs,
+  value,
+  onChange,
+}: {
+  tabs: { id: T; label: string }[];
+  value: T;
+  onChange: (id: T) => void;
+}) {
   return (
-    <div className="flex items-center gap-3">
-      <svg width="42" height="42" viewBox="0 0 42 42" className="-rotate-90">
-        <circle cx="21" cy="21" r={r} fill="none" stroke="var(--color-border)" strokeWidth="4" />
-        <circle cx="21" cy="21" r={r} fill="none" stroke={color} strokeWidth="4" strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round" />
-      </svg>
-      {label && <span className="text-sm font-semibold text-primary">{label}</span>}
+    <div className="flex gap-1 border-b border-default mb-6" role="tablist">
+      {tabs.map((t) => (
+        <button
+          key={t.id}
+          role="tab"
+          aria-selected={value === t.id}
+          onClick={() => onChange(t.id)}
+          className={cx(
+            "px-3 py-2 text-sm font-medium transition-colors",
+            value === t.id
+              ? "text-primary border-b-2 border-brand -mb-px"
+              : "text-muted hover:text-secondary",
+          )}
+        >
+          {t.label}
+        </button>
+      ))}
     </div>
   );
 }
 
-export function difficultyColor(d: string) {
-  return d === "beginner" ? "text-success" : d === "intermediate" ? "text-warning" : "text-error";
+/* --------------------------------- Spinner --------------------------------- */
+export function Spinner({ className }: { className?: string }) {
+  return <Loader2 className={cx("animate-spin text-brand", className)} size={18} />;
 }

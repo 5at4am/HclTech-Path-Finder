@@ -1,16 +1,37 @@
-export interface GoalAnalysis {
+// TypeScript mirror of backend/app/schemas/__init__.py
+// Only render fields the API actually returns. Never fabricate.
+
+export interface GoalAnalysisResponse {
   goal: string;
   domain: string;
   target_role: string;
-  timeline_months: number | null;
+  timeline_months?: number | null;
   objectives: string[];
   detected_skills: string[];
   missing_information: string[];
   summary: string;
 }
 
-export interface ProfileData {
-  learner_id?: string;
+export interface ProfileCreate {
+  learner_id?: string | null;
+  name?: string;
+  goal?: string;
+  target_role?: string;
+  timeline_months?: number;
+  interests?: string[];
+  experience_level?: string;
+  current_skills?: Record<string, number>;
+  completed_courses?: string[];
+  objectives?: string[];
+  study_time_per_week?: number;
+  preferred_format?: string;
+  preferred_pace?: string;
+  difficulty_preference?: string;
+  learning_history?: string[];
+}
+
+export interface ProfileResponse {
+  learner_id: string;
   name: string;
   goal: string;
   target_role: string;
@@ -25,19 +46,7 @@ export interface ProfileData {
   preferred_pace: string;
   difficulty_preference: string;
   learning_history: string[];
-}
-
-export interface ProfileResponse extends ProfileData {
-  learner_id: string;
-  created_at?: string;
-}
-
-export interface SkillGap {
-  skill: string;
-  current_level: number;
-  required_level: number;
-  gap: number;
-  priority: number;
+  created_at?: string | null;
 }
 
 export interface ResourceOut {
@@ -78,12 +87,17 @@ export interface RecommendationOut {
   reason: string;
 }
 
+export interface RecommendationsResponse {
+  learner_id: string;
+  recommendations: RecommendationOut[];
+}
+
 export interface LearningStepOut {
   id: string;
   resource_id: string;
   order: number;
   phase: string;
-  status: string;
+  status: "completed" | "current" | "recommended" | "locked" | "optional";
   completion_percentage: number;
   estimated_hours: number;
   milestone: boolean;
@@ -96,7 +110,7 @@ export interface LearningStepOut {
   evidence: Evidence | null;
 }
 
-export interface PathOut {
+export interface PathGenerateResponse {
   path_id: string;
   learner_id: string;
   goal: string;
@@ -107,12 +121,21 @@ export interface PathOut {
   steps: LearningStepOut[];
 }
 
+export interface PathOut extends PathGenerateResponse {}
+
+export interface SimulateResponse {
+  current: Record<string, number>;
+  simulated: Record<string, number>;
+  changes_summary: string[];
+  steps: LearningStepOut[];
+}
+
 export interface ProgressResponse {
   learner_id: string;
   resource_id: string;
   completion_percentage: number;
   status: string;
-  next_action: string | null;
+  next_action?: string | null;
   path_complete_pct: number;
 }
 
@@ -124,21 +147,14 @@ export interface FeedbackResponse {
 
 export interface MentorResponse {
   message: string;
-  sources: { type: string; id: string }[];
+  sources: Record<string, unknown>[];
   evidence: Evidence | null;
 }
 
 export interface MentorHistoryItem {
   role: "user" | "assistant";
   message: string;
-  sources: { type: string; id: string }[];
-}
-
-export interface SimulateResponse {
-  current: Record<string, number>;
-  simulated: Record<string, number>;
-  changes_summary: string[];
-  steps: LearningStepOut[];
+  sources: Record<string, unknown>[];
 }
 
 export interface DashboardResponse {
@@ -162,3 +178,21 @@ export interface DashboardResponse {
   priority_gaps: { skill: string; gap: number; current_level: number }[];
   recent_feedback: { resource_id: string; helpful: boolean; reason: string }[];
 }
+
+export interface HealthResponse {
+  status: string;
+  version: string;
+  groq_configured: boolean;
+  database?: string;
+  resources?: number;
+  model_ready?: boolean;
+}
+
+export const STEP_STATUS = {
+  completed: "completed",
+  current: "current",
+  recommended: "recommended",
+  available: "available",
+  locked: "locked",
+  optional: "optional",
+} as const;
