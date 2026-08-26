@@ -20,7 +20,7 @@ const LS_THEME = "padhai.theme";
 function initialTheme(): Theme {
   const stored = localStorage.getItem(LS_THEME);
   if (stored === "light" || stored === "dark") return stored;
-  return "dark";
+  return "light";
 }
 
 function applyTheme(theme: Theme) {
