@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -20,9 +20,58 @@ import { Button, Badge, Card } from "../components/ui";
 
 // Applying Linear's system: violet #8338EC maps to Linear #5e6ad2, hairline rgba(255,255,255,.09) maps to #23252a, display -1.8px tracking, 8px buttons/12px cards, surface ladder canvas→surface.
 
+const TRACKS = {
+  "Frontend": {
+    badge: "6 months · 6h/week",
+    stats: { coverage: "38%", steps: "16 steps" },
+    nodes: [
+      { k: "Current skills", items: ["HTML ✓", "CSS ✓"], tone: "success" as const },
+      { k: "Foundations", items: ["JavaScript", "Responsive Design"], tone: "brand" as const },
+      { k: "Core", items: ["React", "State Management"], tone: "accent" as const },
+      { k: "Advanced", items: ["Next.js", "Performance"], tone: "muted" as const },
+      { k: "Goal", items: ["Frontend Engineer"], tone: "brand" as const },
+    ],
+  },
+  "Backend": {
+    badge: "7 months · 8h/week",
+    stats: { coverage: "45%", steps: "18 steps" },
+    nodes: [
+      { k: "Current skills", items: ["Python ✓", "SQL ✓"], tone: "success" as const },
+      { k: "Foundations", items: ["APIs", "Databases"], tone: "brand" as const },
+      { k: "Core", items: ["Node.js / Express", "Auth"], tone: "accent" as const },
+      { k: "Advanced", items: ["Scaling", "DevOps"], tone: "muted" as const },
+      { k: "Goal", items: ["Backend Engineer"], tone: "brand" as const },
+    ],
+  },
+  "Data Science": {
+    badge: "8 months · 6h/week",
+    stats: { coverage: "42%", steps: "18 steps" },
+    nodes: [
+      { k: "Current skills", items: ["Python ✓", "SQL ✓"], tone: "success" as const },
+      { k: "Foundations", items: ["Statistics", "Probability"], tone: "brand" as const },
+      { k: "Core", items: ["Data Analysis", "Visualization"], tone: "accent" as const },
+      { k: "Advanced", items: ["ML Basics"], tone: "muted" as const },
+      { k: "Goal", items: ["Data Scientist"], tone: "brand" as const },
+    ],
+  },
+  "AI/ML": {
+    badge: "8 months · 6h/week",
+    stats: { coverage: "42%", steps: "18 steps" },
+    nodes: [
+      { k: "Current skills", items: ["Python ✓", "SQL ✓"], tone: "success" as const },
+      { k: "Foundations", items: ["Statistics", "Probability"], tone: "brand" as const },
+      { k: "Core", items: ["Machine Learning"], tone: "accent" as const },
+      { k: "Advanced", items: ["Deep Learning"], tone: "muted" as const },
+      { k: "Goal", items: ["AI / ML Engineer"], tone: "brand" as const },
+    ],
+  },
+} as const;
+type Track = keyof typeof TRACKS;
+
 export function Landing() {
   const { learnerId, theme, toggleTheme } = useLearner();
   const navigate = useNavigate();
+  const [track, setTrack] = useState<Track>("AI/ML");
 
   useEffect(() => {
     if (learnerId) navigate("/dashboard", { replace: true });
@@ -111,20 +160,36 @@ export function Landing() {
                 <span className="text-caption font-semibold tracking-wide uppercase" style={{ color: "var(--color-text-muted)", letterSpacing: "0.4px" }}>
                   Your path preview
                 </span>
-                <Badge tone="brand">8 months · 6h/week</Badge>
+                <Badge tone="brand">{TRACKS[track].badge}</Badge>
               </div>
-              <div className="p-5">
-                <PathPreview />
+              <div className="px-5 pt-3 pb-1 flex flex-wrap gap-1.5">
+                {(Object.keys(TRACKS) as Track[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTrack(t)}
+                    className="pill text-xs"
+                    style={
+                      track === t
+                        ? { background: "var(--violet-500)", color: "#fff", borderColor: "var(--violet-500)" }
+                        : undefined
+                    }
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <div className="p-5 pt-3">
+                <PathPreview track={track} />
               </div>
               <div
                 className="px-5 py-3 border-t flex items-center justify-between text-caption"
                 style={{ borderColor: "var(--color-border)", background: "var(--color-surface-tertiary)", color: "var(--color-text-muted)" }}
               >
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock size={13} /> 42% prerequisites covered
+                  <Clock size={13} /> {TRACKS[track].stats.coverage} prerequisites covered
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <Sparkles size={13} style={{ color: "var(--violet-500)" }} /> 18 steps
+                  <Sparkles size={13} style={{ color: "var(--violet-500)" }} /> {TRACKS[track].stats.steps}
                 </span>
               </div>
             </div>
@@ -419,14 +484,8 @@ function SkillRow({ label, value, tone }: { label: string; value: number; tone: 
   );
 }
 
-function PathPreview() {
-  const nodes = [
-    { k: "Current skills", items: ["Python ✓", "SQL ✓"], tone: "success" as const },
-    { k: "Foundations", items: ["Statistics", "Probability"], tone: "brand" as const },
-    { k: "Core", items: ["Machine Learning"], tone: "accent" as const },
-    { k: "Advanced", items: ["Deep Learning"], tone: "muted" as const },
-    { k: "Goal", items: ["AI / ML Engineer"], tone: "brand" as const },
-  ];
+function PathPreview({ track }: { track: Track }) {
+  const nodes = TRACKS[track].nodes;
   return (
     <div className="space-y-3">
       {nodes.map((n, i) => (
