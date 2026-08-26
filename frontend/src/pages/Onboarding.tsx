@@ -365,20 +365,34 @@ export function Onboarding() {
               </div>
 
               <div className="mt-8">
-                <label className="label">Current skills</label>
-                <div className="flex gap-2">
-                  <Input placeholder="e.g. Python" value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }} className="flex-1" />
-                  <Select value={String(newSkillLevel)} onChange={(e) => setNewSkillLevel(parseInt(e.target.value, 10))} className="w-[150px]">
-                    <option value="25">Beginner</option>
-                    <option value="50">Intermediate</option>
-                    <option value="75">Advanced</option>
-                    <option value="90">Expert</option>
+                <label className="label">Current skills <span className="font-normal" style={{ color: "var(--color-text-muted)" }}>— add what you know</span></label>
+                <div className="flex gap-2 items-center">
+                  <Input placeholder="Type a skill — e.g. Python, press Enter" value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }} className="flex-1 h-10 text-sm" />
+                  <div className="hidden sm:flex rounded-lg border p-1 gap-1 shrink-0" style={{ borderColor: "var(--color-border)", background: "var(--color-surface-tertiary)" }}>
+                    {[
+                      { v: 25, l: "Beg" },
+                      { v: 50, l: "Mid" },
+                      { v: 75, l: "Adv" },
+                      { v: 90, l: "Exp" },
+                    ].map((o) => (
+                      <button
+                        key={o.v}
+                        type="button"
+                        onClick={() => setNewSkillLevel(o.v)}
+                        className={cx("px-2.5 py-1 rounded-md text-xs font-medium transition-colors", newSkillLevel === o.v ? "bg-brand text-white" : "text-muted hover:text-primary")}
+                        title={levelLabel(o.v)}
+                      >
+                        {o.l}
+                      </button>
+                    ))}
+                  </div>
+                  <Select value={String(newSkillLevel)} onChange={(e) => setNewSkillLevel(parseInt(e.target.value, 10))} className="sm:hidden w-[110px] h-10 text-xs">
+                    <option value="25">Beg</option>
+                    <option value="50">Mid</option>
+                    <option value="75">Adv</option>
+                    <option value="90">Exp</option>
                   </Select>
-                  <Button
-                    type="button"
-                    onClick={() => { const n = newSkillName.trim(); if (!n) return; if (skills.some((s) => s.name.toLowerCase() === n.toLowerCase())) return; setSkills((p) => [...p, { name: n, level: newSkillLevel }]); setNewSkillName(""); }}
-                    disabled={!newSkillName.trim()}
-                  >
+                  <Button type="button" onClick={addSkill} disabled={!newSkillName.trim()} size="sm" className="h-10 px-3 shrink-0">
                     <Plus size={14} /> Add
                   </Button>
                 </div>
