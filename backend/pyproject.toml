@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "backend"
 version = "0.1.0"
 description = "PadhAI backend — personalized learning-path API (FastAPI + ML course matcher + Groq)."

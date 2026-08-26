@@ -1,4 +1,4 @@
-﻿services:
+services:
   # PadhAI API (FastAPI). Create the service from this blueprint and set the
   # secret GROQ_API_KEY in the Render dashboard (never commit it).
   - type: web

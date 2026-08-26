@@ -16,7 +16,9 @@ import type {
   SimulateResponse,
 } from "./types";
 
-const BASE = "/api";
+const BASE = import.meta.env.VITE_API_BASE
+  ? `${String(import.meta.env.VITE_API_BASE).replace(/\/$/, "")}/api`
+  : "/api";
 
 export class ApiError extends Error {
   status: number;

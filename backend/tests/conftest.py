@@ -1,4 +1,4 @@
-﻿"""Shared fixtures for the PadhAI backend test suite.
+"""Shared fixtures for the PadhAI backend test suite.
 
 The DATABASE_URL environment variable MUST be set before any `app.*` import so
 that config/database bind the ORM to a disposable SQLite file instead of the
