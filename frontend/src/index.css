@@ -1,130 +1,54 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+/* ==========================================================================
+   VOLCANIC ASH — TOKENS (corrected)
+   Two real themes, one accent discipline: violet = action, orange = data/attention.
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ==========================================================================
-   VOLCANIC ASH DESIGN SYSTEM
-   Purple / Orange / Ink  —  Light + Dark
-   (Palette + component classes supplied as the single source of truth.)
-   Tailwind color tokens in tailwind.config.js map to the CSS variables
-   below, so every `bg-surface` / `text-primary` / `bg-accent` utility
-   re-themes and supports light/dark automatically.
-   ========================================================================== */
-
-/* 2. DESIGN TOKENS --------------------------------------------------------- */
-
 :root {
-  --purple-50: #f7f3ff;
-  --purple-100: #ede4ff;
-  --purple-200: #dcc9ff;
-  --purple-300: #c3a4ff;
-  --purple-400: #a77af3;
-  --purple-500: #8338ec;
-  --purple-600: #7029d9;
-  --purple-700: #5b1fba;
-  --purple-800: #45178f;
-  --purple-900: #30105f;
+  /* ---- VOLCANIC ASH PALETTE — §05 ---- */
+  --ash-0:#ffffff; --ash-50:#f4f2ef; --ash-100:#e9e7e3; --ash-200:#d5d2cd; --ash-300:#b7b4af;
+  --ash-400:#92908c; --ash-500:#6f6d69; --ash-600:#505054; --ash-700:#383b40; --ash-800:#292c30;
+  --ash-900:#1c1e21; --ash-950:#111214;
 
-  --orange-50: #fff4ee;
-  --orange-100: #ffe4d6;
-  --orange-200: #ffc5a9;
-  --orange-300: #ffa078;
-  --orange-400: #ff7a3d;
-  --orange-500: #fb5607;
-  --orange-600: #df4700;
-  --orange-700: #b93a00;
-  --orange-800: #8f2d00;
-  --orange-900: #641e00;
+  --violet-300:#c3a4ff; --violet-400:#a77af3; --violet-500:#8338ec; --violet-600:#7029d9;
+  --violet-700:#5b1fba; --violet-800:#45178f;
 
-  --ink-950: #0b0a10;
-  --ink-900: #111018;
-  --ink-800: #17151f;
-  --ink-700: #21202a;
-  --ink-600: #2c2a35;
-  --ink-500: #3b3945;
+  --orange-300:#ffa078; --orange-400:#ff7a3d; --orange-500:#fb5607; --orange-600:#df4700; --orange-700:#b93a00;
 
-  --gray-950: #17181c;
-  --gray-900: #212329;
-  --gray-800: #30333a;
-  --gray-700: #4a4e57;
-  --gray-600: #6f7480;
-  --gray-500: #858a96;
-  --gray-400: #a7abb5;
-  --gray-300: #c7cad1;
-  --gray-200: #e0e2e7;
-  --gray-100: #f1f2f5;
-  --gray-50: #f8f8fa;
+  --green-400:#3ddc84; --green-500:#2bb86a;
 
-  --white: #ffffff;
+  /* keep legacy purple/orange scales for backward compat */
+  --purple-50:#f3edff; --purple-100:#e8ddff; --purple-200:#dcc9ff; --purple-300:#c3a4ff;
+  --purple-400:#a77af3; --purple-500:#8338ec; --purple-600:#7029d9; --purple-700:#5b1fba;
+  --purple-800:#45178f; --purple-900:#30105f;
+  --orange-50:#fff4ee; --orange-100:#ffe4d6; --orange-200:#ffc5a9; --orange-300:#ffa078;
+  --orange-400:#ff7a3d; --orange-500:#fb5607; --orange-600:#df4700; --orange-700:#b93a00;
+  --orange-800:#8f2d00; --orange-900:#641e00;
+  --ink-50:#f7f6f5; --ink-100:#e9ecef; --ink-200:#d8dce0; --ink-300:#b7bcc2;
+  --ink-400:#9ca3aa; --ink-500:#6b7280; --ink-600:#4a4f56; --ink-700:#383d42;
+  --ink-800:#2b2f33; --ink-900:#212529; --ink-950:#16181a;
+  --green-complete-dark:#3ddc84; --green-complete-light:#2bb86a;
 
-  --success-500: #22c55e;
-  --success-600: #16a34a;
+  /* ---- alias compat — ensures --violet / --orange / --green-complete resolve ---- */
+  --violet: var(--violet-500);
+  --orange: var(--orange-500);
+  --green-complete: var(--green-complete-dark);
+  --green: var(--green-500);
+  /* legacy text/border alias compat */
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
 
-  --warning-500: #f59e0b;
-  --warning-600: #d97706;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
 
-  --error-500: #ef4444;
-  --error-600: #dc2626;
-
-  --info-500: #3b82f6;
-  --info-600: #2563eb;
-
-  /* LIGHT THEME */
-  --color-background: var(--gray-50);
-  --color-background-subtle: var(--gray-100);
-
-  --color-surface: var(--gray-100);
-  --color-surface-secondary: var(--gray-50);
-  --color-surface-tertiary: var(--gray-100);
-  --color-surface-elevated: var(--white);
-  --color-card: var(--white);
-
-  --color-border: var(--gray-200);
-  --color-border-subtle: var(--gray-100);
-  --color-border-strong: var(--gray-300);
-
-  --color-text: var(--gray-950);
-  --color-text-secondary: var(--gray-700);
-  --color-text-muted: var(--gray-600);
-  --color-text-placeholder: var(--gray-500);
-  --color-text-disabled: var(--gray-400);
-
-  --color-brand: var(--purple-600);
-  --color-brand-hover: var(--purple-700);
-  --color-brand-active: var(--purple-800);
-  --color-brand-soft: var(--purple-100);
-  --color-brand-muted: var(--purple-50);
-
-  --color-accent: var(--orange-600);
-  --color-accent-hover: var(--orange-700);
-  --color-accent-active: var(--orange-800);
-  --color-accent-soft: var(--orange-100);
-
-  --color-success: var(--success-600);
-  --color-warning: var(--warning-600);
-  --color-error: var(--error-600);
-  --color-info: var(--info-600);
-
-  --color-on-brand: #ffffff;
-  --color-on-accent: #ffffff;
-
-  --font-sans:
-    "Inter",
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-
-  --font-mono:
-    "SFMono-Regular",
-    Consolas,
-    "Liberation Mono",
-    monospace;
-
+  /* sizing / spacing / radius / shadow / motion — keep as-is */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-md: 1rem;
@@ -153,10 +77,10 @@
 
   --radius-xs: 4px;
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-  --radius-2xl: 28px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
   --radius-full: 9999px;
 
   --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
@@ -176,91 +100,119 @@
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 3. DARK THEME ------------------------------------------------------------ */
-
-.dark,
+/* ==========================================================================
+   DARK THEME — primary experience §06 — 70/20/10 volcanic
+   ========================================================================== */
+:root,
 [data-theme="dark"] {
-  --color-background: var(--ink-950);
-  --color-background-subtle: var(--ink-900);
+  color-scheme: dark;
 
-  --color-surface: var(--ink-900);
-  --color-surface-secondary: var(--ink-900);
-  --color-surface-tertiary: var(--ink-800);
-  --color-surface-elevated: var(--ink-700);
-  --color-card: var(--ink-800);
+  --color-background: #111214;
+  --color-background-subtle: #1c1e21;
+  --color-surface: #1c1e21;
+  --color-surface-secondary: #1c1e21;
+  --color-surface-tertiary: #292c30;
+  --color-surface-hover: #292c30;
+  --color-surface-raised: #292c30;
+  --color-surface-elevated: #303338;
+  --color-card: #1c1e21;
 
-  --color-border: var(--ink-600);
-  --color-border-subtle: var(--ink-700);
-  --color-border-strong: var(--ink-500);
+  --color-border: rgba(255,255,255,.09);
+  --color-border-subtle: rgba(255,255,255,.055);
+  --color-border-strong: rgba(255,255,255,.16);
 
-  --color-text: var(--white);
-  --color-text-secondary: var(--gray-300);
-  --color-text-muted: var(--gray-500);
-  --color-text-placeholder: var(--gray-500);
-  --color-text-disabled: #5c5f69;
+  --color-text: #f4f2ef;
+  --color-text-secondary: #c2c0bc;
+  --color-text-muted: #85838a;
+  --color-text-placeholder: #85838a;
+  --color-text-disabled: #55575c;
 
-  --color-brand: var(--purple-500);
-  --color-brand-hover: var(--purple-600);
-  --color-brand-active: var(--purple-700);
+  --color-brand: #8338ec;
+  --color-brand-hover: #a77af3;
+  --color-brand-active: #7029d9;
   --color-brand-soft: rgba(131, 56, 236, 0.14);
   --color-brand-muted: rgba(131, 56, 236, 0.08);
 
-  --color-accent: var(--orange-500);
-  --color-accent-hover: var(--orange-600);
-  --color-accent-active: var(--orange-700);
+  --color-accent: #fb5607;
+  --color-accent-hover: #ff7a3d;
+  --color-accent-active: #df4700;
   --color-accent-soft: rgba(251, 86, 7, 0.12);
 
-  --color-success: var(--success-500);
-  --color-warning: var(--warning-500);
-  --color-error: var(--error-500);
-  --color-info: var(--info-500);
-
+  --color-complete: #3ddc84;
+  --color-success: #3ddc84;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
   --color-on-brand: #ffffff;
   --color-on-accent: #ffffff;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.4);
-  --shadow-brand:
-    0 0 0 1px rgba(131, 56, 236, 0.15),
-    0 16px 50px rgba(0, 0, 0, 0.35);
+  --shadow-brand: 0 0 0 1px rgba(131,56,236,.15), 0 16px 50px rgba(0,0,0,.35);
 }
 
-/* 4. SYSTEM DARK MODE ------------------------------------------------------ */
+/* ==========================================================================
+   LIGHT THEME — secondary mode §07 — warm ash, same brand
+   ========================================================================== */
+[data-theme="light"] {
+  color-scheme: light;
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-background: var(--ink-950);
-    --color-background-subtle: var(--ink-900);
+  --color-background: #f4f2ef;          /* ash-50 */
+  --color-background-subtle: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #ffffff;
+  --color-surface-tertiary: #e9e7e3;      /* ash-100 */
+  --color-surface-hover: #e9e7e3;
+  --color-surface-raised: #e9e7e3;
+  --color-surface-elevated: #ffffff;
+  --color-card: #ffffff;
+  --color-border: rgba(17,18,20,.08);
+  --color-border-subtle: rgba(17,18,20,.05);
+  --color-border-strong: rgba(17,18,20,.14);
 
-    --color-surface: var(--ink-900);
-    --color-surface-secondary: var(--ink-900);
-    --color-surface-tertiary: var(--ink-800);
-    --color-surface-elevated: var(--ink-700);
-    --color-card: var(--ink-800);
+  --color-text: #1c1e21;                /* ash-900 */
+  --color-text-secondary: #505054;      /* ash-600 */
+  --color-text-muted: #6f6d69;          /* ash-500 */
+  --color-text-placeholder: #92908c;
+  --color-text-disabled: #b7b4af;
 
-    --color-border: var(--ink-600);
-    --color-border-subtle: var(--ink-700);
-    --color-border-strong: var(--ink-500);
+  --color-brand: #8338ec;            /* same hue — brand recognizable */
+  --color-brand-hover: #7029d9;
+  --color-brand-active: #5b1fba;
+  --color-brand-soft: rgba(131, 56, 236, 0.08);
+  --color-brand-muted: rgba(131, 56, 236, 0.05);
 
-    --color-text: var(--white);
-    --color-text-secondary: var(--gray-300);
-    --color-text-muted: var(--gray-500);
-    --color-text-placeholder: var(--gray-500);
-    --color-text-disabled: #5c5f69;
+  --color-accent: #df4700;           /* darker for AA on white */
+  --color-accent-hover: #b93a00;
+  --color-accent-active: #8f2d00;
+  --color-accent-soft: rgba(251, 86, 7, 0.08);
 
-    --color-brand: var(--purple-500);
-    --color-brand-hover: var(--purple-600);
-    --color-brand-active: var(--purple-700);
+  --color-complete: #2bb86a;
+  --color-success: #2bb86a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #2563eb;
+  --color-on-brand: #ffffff;
+  --color-on-accent: #ffffff;
 
-    --color-accent: var(--orange-500);
-    --color-accent-hover: var(--orange-600);
-    --color-accent-active: var(--orange-700);
-  }
+  --shadow-md: 0 8px 24px rgba(16, 24, 40, 0.08);
+  --shadow-brand: 0 12px 40px rgba(112, 41, 217, 0.14);
 }
 
-/* 5. GLOBAL RESET ---------------------------------------------------------- */
+/* ==========================================================================
+   TYPE ROLES — now actually differentiated (add font-family to existing
+   .text-display-* / .text-heading-* classes; body/caption stay Inter)
+   ========================================================================== */
+.text-display-xl, .text-display-lg,
+.text-heading-xl, .text-heading-lg, .text-heading-md, .text-heading-sm {
+  font-family: var(--font-display);
+}
+
+/* evidence / data-mono utility — use for skill %, similarity scores,
+   evidence quotes, course metadata ("10 hrs · Video") */
+.text-mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1; /* tabular numerals, keeps stats aligned */
+}
 
 *,
 *::before,
@@ -326,14 +278,18 @@ a {
   text-decoration: none;
 }
 
-/* 6. TEXT SELECTION -------------------------------------------------------- */
+/* 6. TEXT SELECTION — violet discipline --------------------------------------- */
 
 ::selection {
   color: #ffffff;
-  background: var(--purple-600);
+  background: var(--violet-500);
+}
+::-moz-selection {
+  color: #ffffff;
+  background: var(--violet-500);
 }
 
-/* 7. SCROLLBAR ------------------------------------------------------------- */
+/* 7. SCROLLBAR — hairline, 70/20/10 ----------------------------------------- */
 
 * {
   scrollbar-width: thin;
@@ -341,8 +297,8 @@ a {
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -352,10 +308,17 @@ a {
 ::-webkit-scrollbar-thumb {
   background: var(--color-border-strong);
   border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background: rgba(255,255,255,.18);
+  background-clip: padding-box;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(17,18,20,.18);
+  background-clip: padding-box;
 }
 
 /* 8. TYPOGRAPHY ------------------------------------------------------------ */
@@ -369,8 +332,8 @@ a {
 
 .text-display-lg {
   font-size: clamp(2.75rem, 6vw, 3.5rem);
-  line-height: 1.1;
-  letter-spacing: -0.035em;
+  line-height: 1.0;
+  letter-spacing: -0.04em;
   font-weight: 800;
 }
 
@@ -511,60 +474,81 @@ a {
   border: 1px solid var(--color-border-strong);
 }
 
-/* 12. CARDS ---------------------------------------------------------------- */
+/* 12. CARDS — Volcanic Ash: flat, solid, 70/20/10 -----------------------------
+   Level 0/1 = no shadow. Level 3 (dropdown/modal/popover) only gets shadow.
+   Hover = border-strong + surface-hover only, NO translateY.
+   -------------------------------------------------------------------------- */
 
 .card {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  background: var(--color-surface); /* #1C1E21 solid — no glass, no gradient */
+  border: 1px solid var(--color-border); /* rgba(255,255,255,.09) */
+  border-radius: 12px;
   color: var(--color-text);
+  box-shadow: none;
 }
 
 .card-interactive {
   transition:
     border-color var(--duration-normal) var(--ease-out),
-    background-color var(--duration-normal) var(--ease-out),
-    transform var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out);
+    background-color var(--duration-normal) var(--ease-out);
 }
 
 .card-interactive:hover {
-  border-color: var(--color-border-strong);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong); /* rgba .16 */
+  background: var(--color-surface-hover); /* #292C30 */
+  transform: none;
+  box-shadow: none;
+}
+.card-interactive:active {
+  background: var(--color-surface-tertiary);
 }
 
+/* elevation — Level 0/1 no shadow; Level 3 opt-in only */
 .card-elevated {
-  background: var(--color-surface-elevated);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  border-radius: 12px;
+  box-shadow: none;
+}
+/* use ONLY for dropdown / modal / popover — rare Level 3 */
+.elevated-3,
+.popover,
+.dropdown,
+.modal {
   box-shadow: var(--shadow-md);
 }
+[data-theme="light"] .elevated-3,
+[data-theme="light"] .popover,
+[data-theme="light"] .dropdown,
+[data-theme="light"] .modal {
+  box-shadow: var(--shadow-lg);
+}
 
+/* featured — rare, only .card-featured gets violet atmosphere */
 .card-featured {
   position: relative;
   overflow: hidden;
-  background:
-    linear-gradient(
-      135deg,
-      var(--purple-900),
-      var(--ink-800) 65%
-    );
-  border: 1px solid rgba(131, 56, 236, 0.35);
-  border-radius: var(--radius-xl);
+  background: linear-gradient(145deg, #24183A 0%, #1C1E21 50%, #161719 100%);
+  border: 1px solid rgba(131, 56, 236, .28);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px rgba(131,56,236,.08),
+    0 16px 40px rgba(131,56,236,.10),
+    0 4px 16px rgba(0,0,0,.35);
 }
 
 .card-featured::before {
   content: "";
   position: absolute;
-  width: 280px;
-  height: 280px;
-  top: -160px;
-  right: -100px;
-  background: rgba(131, 56, 236, 0.2);
+  width: 320px;
+  height: 320px;
+  top: -140px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(131,56,236,.14) 0%, transparent 70%);
   border-radius: 50%;
-  filter: blur(70px);
+  filter: blur(18px);
   pointer-events: none;
+  opacity: 0.9;
 }
 
 /* 13. BUTTONS -------------------------------------------------------------- */
@@ -575,11 +559,11 @@ a {
   justify-content: center;
   gap: 0.5rem;
 
-  min-height: 44px;
+  min-height: 42px;
   padding-inline: 1rem;
 
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
 
   font-size: 0.875rem;
   font-weight: 600;
@@ -598,7 +582,7 @@ a {
 }
 
 .btn:active {
-  transform: translateY(1px);
+  transform: translateY(0.5px);
 }
 
 .btn:disabled {
@@ -608,50 +592,58 @@ a {
 
 .btn-primary {
   color: var(--color-on-brand);
-  background: var(--color-brand);
+  background: var(--color-brand); /* #8338EC — violet ONLY for primary action */
+  border-color: var(--color-brand);
 }
 
 .btn-primary:hover {
-  background: var(--color-brand-hover);
-  box-shadow: var(--shadow-brand);
+  background: var(--color-brand-hover); /* #A77AF3 */
+  border-color: var(--color-brand-hover);
+  box-shadow: 0 0 0 1px rgba(131,56,236,.12), 0 4px 16px rgba(131,56,236,.18);
 }
 
 .btn-primary:active {
-  background: var(--color-brand-active);
+  background: var(--color-brand-active); /* #7029D9 */
+  border-color: var(--color-brand-active);
 }
 
 .btn-secondary {
   color: var(--color-text);
-  background: var(--color-surface);
-  border-color: var(--color-border-strong);
+  background: var(--color-surface); /* #1C1E21 neutral */
+  border-color: var(--color-border-strong); /* rgba 0.16 */
 }
 
 .btn-secondary:hover {
-  background: var(--color-surface-tertiary);
-  border-color: var(--color-text-muted);
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
 }
 
 .btn-ghost {
   color: var(--color-text-secondary);
   background: transparent;
+  border-color: transparent;
 }
 
 .btn-ghost:hover {
   color: var(--color-text);
   background: var(--color-surface-tertiary);
+  border-color: transparent;
 }
-
+/* orange is DATA only — never for buttons. Kept for compat, do not use for primary CTAs. */
 .btn-accent {
   color: var(--color-on-accent);
   background: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .btn-accent:hover {
   background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
 
 .btn-accent:active {
   background: var(--color-accent-active);
+  border-color: var(--color-accent-active);
 }
 
 .btn-sm {
@@ -697,10 +689,10 @@ a {
   width: 100%;
 
   color: var(--color-text);
-  background: var(--color-surface);
+  background: var(--color-surface); /* #1C1E21 quiet dark */
 
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border); /* rgba .09 quiet */
+  border-radius: 8px;
 
   outline: none;
 
@@ -711,7 +703,7 @@ a {
 }
 
 .input {
-  min-height: 44px;
+  min-height: 42px;
   padding-inline: 0.875rem;
 }
 
@@ -722,7 +714,7 @@ a {
 }
 
 .select {
-  min-height: 44px;
+  min-height: 42px;
   padding-inline: 0.875rem;
 }
 
@@ -734,14 +726,15 @@ a {
 .input:hover,
 .textarea:hover,
 .select:hover {
-  border-color: var(--color-text-muted);
+  border-color: var(--color-border-strong); /* rgba .16 */
 }
 
 .input:focus,
 .textarea:focus,
 .select:focus {
-  border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px var(--color-brand-soft);
+  border-color: var(--color-brand); /* #8338EC violet */
+  box-shadow: 0 0 0 3px var(--color-brand-soft); /* rgba 131,56,236,0.14 */
+  background: var(--color-surface);
 }
 
 .input:disabled,
@@ -812,33 +805,51 @@ a {
 }
 
 .badge-brand {
-  color: var(--purple-400);
+  color: var(--violet-400); /* active / violet */
   background: var(--color-brand-soft);
+  border: 1px solid rgba(131,56,236,.18);
 }
 
 .badge-accent {
-  color: var(--orange-500);
+  color: var(--orange-500); /* data / orange */
   background: var(--color-accent-soft);
+  border: 1px solid rgba(251,86,7,.18);
+}
+.badge-neutral {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-tertiary);
+  border: 1px solid var(--color-border);
 }
 
 .badge-success {
-  color: var(--success-600);
-  background: rgba(34, 197, 94, 0.12);
+  color: var(--color-success);
+  background: rgba(61,220,132, 0.12);
+  border: 1px solid rgba(61,220,132,.18);
 }
 
 .badge-warning {
-  color: var(--warning-600);
+  color: var(--color-warning);
   background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245,158,11,.18);
 }
 
 .badge-error {
-  color: var(--error-600);
+  color: var(--color-error);
   background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239,68,68,.18);
 }
 
 .badge-info {
-  color: var(--info-600);
+  color: var(--color-info);
   background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59,130,246,.18);
+}
+/* data value — mono, accent orange, for metrics / evidence */
+.data-value {
+  color: var(--color-accent); /* #FB5607 */
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 18. NAVIGATION ----------------------------------------------------------- */
@@ -848,12 +859,12 @@ a {
   top: 0;
   z-index: 50;
 
-  background: color-mix(in srgb, var(--color-background) 85%, transparent);
+  background: color-mix(in srgb, var(--color-background) 86%, transparent);
 
   border-bottom: 1px solid var(--color-border);
 
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .nav-link {
@@ -862,23 +873,28 @@ a {
   display: inline-flex;
   align-items: center;
 
-  min-height: 44px;
+  min-height: 40px;
   padding-inline: 0.625rem;
 
-  color: var(--color-text-muted);
+  color: var(--color-text-muted); /* quiet */
 
   font-size: 0.875rem;
   font-weight: 500;
 
-  transition: color var(--duration-fast) var(--ease-out);
+  border-radius: 8px;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
 }
 
 .nav-link:hover {
-  color: var(--color-text);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-tertiary);
 }
 
 .nav-link.active {
-  color: var(--color-text);
+  color: #ffffff;
+  background: var(--color-brand-soft); /* violet soft bg */
 }
 
 .nav-link.active::after {
@@ -891,11 +907,11 @@ a {
 
   height: 2px;
 
-  background: var(--color-brand);
+  background: var(--color-brand); /* #8338EC indicator */
   border-radius: var(--radius-full);
 }
 
-/* 19. HERO ----------------------------------------------------------------- */
+/* 19. HERO — rare atmosphere, reduced opacity -------------------------------- */
 
 .hero {
   position: relative;
@@ -903,14 +919,14 @@ a {
 
   background:
     radial-gradient(
-      circle at 75% 20%,
-      rgba(131, 56, 236, 0.18),
-      transparent 30%
+      circle at 75% 18%,
+      rgba(131, 56, 236, 0.09),
+      transparent 34%
     ),
     radial-gradient(
-      circle at 90% 70%,
-      rgba(251, 86, 7, 0.06),
-      transparent 25%
+      circle at 90% 72%,
+      rgba(251, 86, 7, 0.04),
+      transparent 28%
     ),
     var(--color-background);
 }
@@ -920,17 +936,17 @@ a {
 
   position: absolute;
 
-  width: 500px;
-  height: 500px;
+  width: 420px;
+  height: 420px;
 
-  top: -250px;
-  right: -150px;
+  top: -220px;
+  right: -120px;
 
-  background: rgba(131, 56, 236, 0.12);
+  background: rgba(131, 56, 236, 0.06);
 
   border-radius: 50%;
 
-  filter: blur(100px);
+  filter: blur(80px);
 
   pointer-events: none;
 }
@@ -940,55 +956,59 @@ a {
   z-index: 1;
 }
 
-/* 20. GRADIENTS ------------------------------------------------------------ */
+/* 20. GRADIENTS — rare / opt-in only, reduced opacity ----------------------- */
 
 .gradient-brand {
-  background: linear-gradient(135deg, var(--purple-700), var(--purple-500));
+  background: linear-gradient(135deg, var(--violet-700), var(--violet-500));
+  opacity: 0.92;
 }
 
 .gradient-signature {
-  background: linear-gradient(135deg, var(--purple-500), var(--orange-500));
+  background: linear-gradient(135deg, var(--violet-500), var(--orange-500));
+  opacity: 0.9;
 }
 
 .gradient-deep-violet {
   background: linear-gradient(135deg, var(--purple-900), var(--ink-950));
+  opacity: 0.85;
 }
 
 .gradient-surface {
   background: linear-gradient(135deg, var(--ink-800), var(--ink-900));
+  opacity: 0.9;
 }
 
-/* 21. GLOW ---------------------------------------------------------------- */
+/* 21. GLOW — rare, use ONLY for featured / Level 3 ------------------------ */
 
 .glow-purple {
   box-shadow:
-    0 0 0 1px rgba(131, 56, 236, 0.15),
-    0 0 60px rgba(131, 56, 236, 0.15);
+    0 0 0 1px rgba(131, 56, 236, 0.10),
+    0 0 32px rgba(131, 56, 236, 0.10);
 }
 
 .glow-orange {
   box-shadow:
-    0 0 0 1px rgba(251, 86, 7, 0.15),
-    0 0 60px rgba(251, 86, 7, 0.12);
+    0 0 0 1px rgba(251, 86, 7, 0.10),
+    0 0 32px rgba(251, 86, 7, 0.08);
 }
 
-/* 22. GLASS ---------------------------------------------------------------- */
+/* 22. GLASS — restrict to nav / floating only; normal cards stay solid ------- */
 
 .glass {
-  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
 
   border: 1px solid var(--color-border);
 
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .glass-brand {
   background: rgba(131, 56, 236, 0.08);
-  border: 1px solid rgba(131, 56, 236, 0.2);
+  border: 1px solid rgba(131, 56, 236, 0.16);
 
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 /* 23. DIVIDER -------------------------------------------------------------- */
@@ -1042,16 +1062,20 @@ a {
   border-color: rgba(59, 130, 246, 0.25);
 }
 
-/* 26. FOCUS ---------------------------------------------------------------- */
+/* 26. FOCUS — violet #8338EC ------------------------------------------------ */
 
 :focus-visible {
-  outline: 2px solid rgba(131, 56, 236, 0.7);
+  outline: 2px solid #8338EC; /* violet-500 */
   outline-offset: 2px;
+}
+:focus-visible {
+  outline-color: rgba(131, 56, 236, 0.9);
+  box-shadow: 0 0 0 3px rgba(131,56,236,.14);
 }
 
 .dark :focus-visible,
 [data-theme="dark"] :focus-visible {
-  outline-color: rgba(167, 122, 243, 0.75);
+  outline-color: #8338EC;
 }
 
 /* 27. ACCENT LINE --------------------------------------------------------- */
@@ -1060,7 +1084,7 @@ a {
   width: 40px;
   height: 3px;
 
-  background: linear-gradient(90deg, var(--purple-500), var(--orange-500));
+  background: linear-gradient(90deg, var(--violet-500), var(--orange-500));
 
   border-radius: var(--radius-full);
 }
@@ -1079,7 +1103,7 @@ a {
 
   color: #ffffff;
 
-  background: linear-gradient(135deg, var(--purple-600), var(--purple-400));
+  background: linear-gradient(135deg, var(--violet-600), var(--violet-400));
 
   border-radius: 50%;
 
@@ -1206,7 +1230,7 @@ a {
   width: 24px;
   height: 2px;
   border-radius: var(--radius-full);
-  background: linear-gradient(90deg, var(--purple-500), var(--orange-500));
+  background: var(--violet-500);
 }
 
 .pill {
@@ -1232,4 +1256,19 @@ a {
 .meta {
   font-size: 0.8125rem;
   color: var(--color-text-muted);
+}
+
+/* 33. LOCKED / COMPLETE — spec discipline ----------------------------------
+   Locked: text-muted at 50% opacity + lock glyph, no color.
+   Complete: text-primary + checkmark; optional celebratory green #3DDC84
+   used ONLY for completed milestones (scannable across long lists). */
+.is-locked {
+  opacity: 0.5;
+  color: var(--color-text-muted);
+}
+.is-complete {
+  color: var(--color-text);
+}
+.is-complete--celebrate {
+  color: var(--color-complete); /* #3DDC84 */
 }

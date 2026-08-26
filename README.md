@@ -1,8 +1,10 @@
-﻿# Astrolabe
+﻿# PadhAI — Tera Learning, AI ke Saath
 
-**Your goal. Your learning path.**
+**Your goal. Your learning path. *Tera Goal, Tera Raasta, AI ke Saath.***
 
-Astrolabe is an AI-powered personalized learning-path recommender built for the
+> Hinglish rebrand of PathFinder / Astrolabe — same AI-powered learning-path engine, now with a desi vibe.
+
+PadhAI is an AI-powered personalized learning-path recommender built for the
 HCL hackathon. Tell it where you want to go in plain language — it figures out
 where you are, finds your skill gaps, and builds an ordered, prerequisite-aware
 roadmap of courses, projects, and assessments. Every recommendation is
@@ -98,7 +100,7 @@ pointing at this repo and fill in the `GROQ_API_KEY` secret when prompted.
    then set the env var:
 
    ```env
-   VITE_API_BASE=https://astrolabe-api.onrender.com   # your Render URL
+   VITE_API_BASE=https://padhai-api.onrender.com   # your Render URL
    ```
 
 3. **CORS** — set `FRONTEND_URL` / `CORS_ORIGINS` on Render to your Vercel URL

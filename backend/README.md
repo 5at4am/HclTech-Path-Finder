@@ -1,6 +1,6 @@
-﻿# Astrolabe — Backend
+﻿# PadhAI — Backend
 
-The Astrolabe backend is a FastAPI service that generates personalized learning
+The PadhAI backend is a FastAPI service that generates personalized learning
 paths from a learner's goal, using a TF-IDF + cosine-similarity course matcher
 (`Model/solution.py`) trained on the real course data in `Data/train.csv`, plus
 an LLM (Groq, via LangChain) for goal parsing and natural-language explanations.
@@ -39,7 +39,7 @@ The API docs are available at `http://127.0.0.1:8000/docs`.
 |-----------------|-----------------------------|-------------------------------------------|
 | `GROQ_API_KEY`  | _(empty)_                   | Enables LLM goal parsing & explanations   |
 | `GROQ_MODEL`    | `qwen/qwen3.6-27b`          | Groq model used by `ChatGroq`             |
-| `DATABASE_URL`  | `sqlite:///../astrolabe.db`  | SQLAlchemy DB URL                         |
+| `DATABASE_URL`  | `sqlite:///../padhai.db`  | SQLAlchemy DB URL                         |
 | `FRONTEND_URL`  | `http://localhost:5173`     | CORS origin                               |
 
 A key is provided for local development; set it in `.env`:

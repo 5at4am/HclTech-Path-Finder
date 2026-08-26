@@ -33,7 +33,7 @@ export function LearningPathPage() {
         <PageHeader eyebrow="Learning path" title="Your path" />
         <EmptyState
           title="No learning path yet"
-          description="Astrolabe sequences your resources into a navigable path ordered by prerequisites and your goals."
+          description="PadhAI sequences your resources into a navigable path ordered by prerequisites and your goals."
           action={
             <Button loading={generate.isPending} onClick={() => generate.mutateAsync().then(() => dash.refetch())}>
               Build my path

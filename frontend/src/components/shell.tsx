@@ -28,12 +28,12 @@ function BrandMark() {
     <div className="flex items-center gap-2.5">
       <div
         className="grid h-8 w-8 place-items-center rounded-md text-white font-bold"
-        style={{ background: "linear-gradient(135deg, var(--purple-600), var(--purple-400))" }}
+        style={{ background: "linear-gradient(135deg, var(--violet-600), var(--violet-400))" }}
         aria-hidden
       >
         ◆
       </div>
-      <span className="text-title font-semibold tracking-tight text-primary">Astrolabe</span>
+      <span className="text-title font-semibold tracking-tight text-primary">PadhAI</span>
     </div>
   );
 }

@@ -100,7 +100,7 @@ export function Onboarding() {
     <div className="min-h-screen bg-bg text-primary">
       <div className="container-page mx-auto px-6 py-10 max-w-3xl">
         <div className="flex items-center justify-between mb-8">
-          <span className="text-title font-semibold">Astrolabe</span>
+          <span className="text-title font-semibold">PadhAI</span>
           <span className="text-caption text-muted">
             Step {step + 1} / {STEPS.length}
           </span>
@@ -139,7 +139,7 @@ export function Onboarding() {
           )}
 
           {step === 1 && (
-            <Section title="What role are you aiming for?" subtitle="This shapes the skills Astrolabe prioritizes.">
+            <Section title="What role are you aiming for?" subtitle="This shapes the skills PadhAI prioritizes.">
               <label className="label">Target role</label>
               <Input
                 autoFocus
@@ -151,7 +151,7 @@ export function Onboarding() {
           )}
 
           {step === 2 && (
-            <Section title="What's your timeline?" subtitle="Astrolabe uses this to pace your path.">
+            <Section title="What's your timeline?" subtitle="PadhAI uses this to pace your path.">
               <label className="label">Target timeline (months)</label>
               <Input
                 type="number"
@@ -231,7 +231,7 @@ export function Onboarding() {
           )}
 
           {step === 6 && (
-            <Section title="Your detected direction" subtitle="Based on your goal, here's how Astrolabe reads it.">
+            <Section title="Your detected direction" subtitle="Based on your goal, here's how PadhAI reads it.">
               {analyze.isPending && (
                 <div className="flex items-center gap-2 text-secondary">
                   <Loader2 className="animate-spin" size={18} /> Analyzing your goal…

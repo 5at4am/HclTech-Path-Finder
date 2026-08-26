@@ -30,7 +30,7 @@ export function Profile() {
       <PageHeader
         eyebrow="Profile"
         title={data.name}
-        description="Your navigation context — the inputs Astrolabe uses to build your path."
+        description="Your navigation context — the inputs PadhAI uses to build your path."
         actions={
           <Button
             variant="ghost"

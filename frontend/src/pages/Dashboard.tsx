@@ -37,7 +37,7 @@ export function Dashboard() {
       <div className="max-w-3xl mx-auto">
         <PageHeader eyebrow="Dashboard" title="No learning path yet" />
         <EmptyState
-          title="Define your goal and Astrolabe will create your personalized path."
+          title="Define your goal and PadhAI will create your personalized path."
           description="Your path is selected deterministically from your goal, skills, and the evidence base."
           action={
             <Button loading={generate.isPending} onClick={() => generate.mutateAsync().then(() => refetch())}>

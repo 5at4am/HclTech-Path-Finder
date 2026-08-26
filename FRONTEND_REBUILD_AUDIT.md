@@ -1,8 +1,8 @@
 # FRONTEND_REBUILD_AUDIT
 
-> Pre-rebuild audit for the Astrolabe frontend. The old SPA is deleted and
+> Pre-rebuild audit for the PadhAI frontend. The old SPA is deleted and
 > rebuilt from a clean foundation that consumes the **real, unchanged backend**
-> (FastAPI "Astrolabe API" v1.0.0). This document is reference material only.
+> (FastAPI "PadhAI API" v1.0.0). This document is reference material only.
 
 ## Current frontend framework
 - React 18 + Vite 5 + TypeScript (strict-ish).
@@ -28,7 +28,7 @@
 ## Current CSS architecture
 - Two layers: Tailwind utilities + `src/index.css` design system (CSS variables, light/dark via `.dark` / `[data-theme]`).
 - Token mapping lives in `tailwind.config.js` (`bg`, `surface`, `elevated`, `border`, `primary/secondary/muted`, `accent`=purple, `signal`=orange, plus `route`/`signature` gradients).
-- The design system already matches the new brief (Volcanic Ash == Astrolabe palette: purple `#8338EC`, orange `#FB5607`, ink `#0B0A10` background). It is **reused and refined**, not discarded.
+- The design system already matches the new brief (Volcanic Ash == PadhAI palette: purple `#8338EC`, orange `#FB5607`, ink `#0B0A10` background). It is **reused and refined**, not discarded.
 
 ## Current API integration
 - `lib/api.ts`: thin fetch wrappers. Pattern is consistent but scattered in one file with no react-query hooks layer; pages call fetch directly and manage loading/error locally.

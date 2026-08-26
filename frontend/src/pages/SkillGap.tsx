@@ -39,7 +39,7 @@ export function SkillGap() {
         <PageHeader eyebrow="Skill gap" title="Your skill map" />
         <EmptyState
           title="No skill gaps to show yet"
-          description="Set a goal and Astrolabe will map your required skills against what you know."
+          description="Set a goal and PadhAI will map your required skills against what you know."
           icon={<Layers size={28} />}
         />
       </div>

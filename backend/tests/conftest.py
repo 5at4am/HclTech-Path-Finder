@@ -1,8 +1,8 @@
-﻿"""Shared fixtures for the Astrolabe backend test suite.
+﻿"""Shared fixtures for the PadhAI backend test suite.
 
 The DATABASE_URL environment variable MUST be set before any `app.*` import so
 that config/database bind the ORM to a disposable SQLite file instead of the
-real astrolabe.db. Groq is never called: tests either exercise endpoints that do
+real padhai.db. Groq is never called: tests either exercise endpoints that do
 not need it or monkeypatch the service functions to deterministic stubs.
 """
 
@@ -18,7 +18,7 @@ BACKEND_DIR = TESTS_DIR.parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-TEST_DB = TESTS_DIR / "_test_astrolabe.db"
+TEST_DB = TESTS_DIR / "_test_padhai.db"
 os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB.as_posix()}"
 
 import pytest  # noqa: E402

@@ -21,8 +21,8 @@ dist/
 # Kaggle dataset dumps (62MB) — the committed backend/app/ml/_catalog_cache.json
 # is derived from train.csv, so clones boot without re-downloading the data.
 # Restore Data/train.csv locally to rebuild the catalog after changing it.
-Data/*.csv
-Model/submission.csv
+# Data/*.csv
+# Model/submission.csv
 
 # Logs
 *.log

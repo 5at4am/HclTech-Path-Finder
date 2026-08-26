@@ -1,8 +1,8 @@
 ﻿services:
-  # Astrolabe API (FastAPI). Create the service from this blueprint and set the
+  # PadhAI API (FastAPI). Create the service from this blueprint and set the
   # secret GROQ_API_KEY in the Render dashboard (never commit it).
   - type: web
-    name: astrolabe-api
+    name: padhai-api
     runtime: python
     rootDir: backend
     plan: free
@@ -27,4 +27,4 @@
       # For durable data, upgrade to a persistent disk or swap DATABASE_URL
       # for Postgres, e.g. postgresql+psycopg://user:pass@host/db
       - key: DATABASE_URL
-        value: sqlite:///astrolabe.db
+        value: sqlite:///padhai.db

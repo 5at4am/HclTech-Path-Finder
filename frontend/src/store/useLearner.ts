@@ -14,8 +14,8 @@ interface LearnerState {
   toggleTheme: () => void;
 }
 
-const LS_LEARNER = "astrolabe.learnerId";
-const LS_THEME = "astrolabe.theme";
+const LS_LEARNER = "padhai.learnerId";
+const LS_THEME = "padhai.theme";
 
 function initialTheme(): Theme {
   const stored = localStorage.getItem(LS_THEME);
