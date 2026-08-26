@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Check, Loader2, Sparkles, Plus, X, Trash2, Lightbulb } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, Loader2, Sparkles, Plus, X } from "lucide-react";
 import { useLearner } from "../store/useLearner";
 import { useAnalyzeGoal, useCreateProfile } from "../lib/hooks";
 import { api } from "../lib/api";
@@ -18,20 +18,7 @@ const STEPS = [
   "Analysis",
 ];
 
-const POPULAR_SKILLS = [
-  "HTML",
-  "CSS",
-  "JavaScript",
-  "React",
-  "TypeScript",
-  "Python",
-  "SQL",
-  "Node.js",
-  "Git",
-  "Data Analysis",
-  "Machine Learning",
-  "UI/UX",
-];
+const POPULAR_SKILLS = ["React", "Python", "JavaScript", "SQL", "HTML/CSS", "Git"];
 
 function levelLabel(v: number) {
   if (v <= 25) return "Beginner";
@@ -110,8 +97,6 @@ export function Onboarding() {
   };
 
   const removeSkill = (name: string) => setSkills((prev) => prev.filter((s) => s.name !== name));
-  const updateSkillLevel = (name: string, level: number) =>
-    setSkills((prev) => prev.map((s) => (s.name === name ? { ...s, level } : s)));
 
   const finish = async () => {
     const current_skills: Record<string, number> = Object.fromEntries(skills.map((s) => [s.name, s.level]));
@@ -259,15 +244,14 @@ export function Onboarding() {
           {step === 5 && (
             <Section
               title="What do you already know?"
-              subtitle="Add skills you already have and rate your confidence. Leave empty if you're starting fresh — we'll figure out the gaps."
+              subtitle="Add what you already know — we'll fill the gaps. Skip if you're starting fresh."
             >
-              {/* Add skill row */}
               <div className="rounded-xl border p-4" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
                 <label className="label">Add a skill</label>
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex gap-2">
                   <Input
                     autoFocus
-                    placeholder="e.g. React, Python, SQL"
+                    placeholder="e.g. React"
                     value={newSkillName}
                     onChange={(e) => setNewSkillName(e.target.value)}
                     onKeyDown={(e) => {
@@ -278,101 +262,59 @@ export function Onboarding() {
                     }}
                     className="flex-1"
                   />
-                  <div className="flex items-center gap-2 sm:w-[220px]">
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={newSkillLevel}
-                      onChange={(e) => setNewSkillLevel(parseInt(e.target.value, 10))}
-                      className="flex-1 accent-[var(--violet-500)]"
-                      aria-label="Skill level"
-                    />
-                    <span className="text-caption font-mono px-2 py-1 rounded-md border min-w-[56px] text-center" style={{ background: "var(--color-surface-tertiary)", borderColor: "var(--color-border)", color: levelColor(newSkillLevel) }}>
-                      {newSkillLevel}%
-                    </span>
-                  </div>
-                  <Button type="button" onClick={addSkill} disabled={!newSkillName.trim()} className="sm:w-auto">
+                  <Select
+                    value={String(newSkillLevel)}
+                    onChange={(e) => setNewSkillLevel(parseInt(e.target.value, 10))}
+                    className="w-[160px]"
+                    aria-label="Level"
+                  >
+                    <option value="25">Beginner</option>
+                    <option value="50">Intermediate</option>
+                    <option value="75">Advanced</option>
+                    <option value="90">Expert</option>
+                  </Select>
+                  <Button type="button" onClick={addSkill} disabled={!newSkillName.trim()}>
                     <Plus size={16} /> Add
                   </Button>
                 </div>
-                <p className="text-caption mt-2 flex items-center gap-1.5" style={{ color: "var(--color-text-muted)" }}>
-                  <Lightbulb size={13} /> Tip: <span style={{ color: levelColor(newSkillLevel) }}>{levelLabel(newSkillLevel)}</span> — drag to adjust before adding
-                </p>
               </div>
 
-              {/* Popular chips */}
-              <div className="mt-4">
-                <p className="text-caption font-medium mb-2" style={{ color: "var(--color-text-muted)" }}>Quick add</p>
-                <div className="flex flex-wrap gap-2">
-                  {POPULAR_SKILLS.map((s) => {
-                    const added = skills.some((k) => k.name.toLowerCase() === s.toLowerCase());
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => addSuggested(s)}
-                        disabled={added}
-                        className={cx(
-                          "pill text-xs transition-colors",
-                          added && "opacity-40 cursor-not-allowed",
-                        )}
-                      >
-                        {s} {added ? <Check size={12} className="text-success" /> : <Plus size={12} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Added skills */}
-              <div className="mt-6">
-                {skills.length === 0 ? (
-                  <div className="rounded-xl border border-dashed p-8 text-center" style={{ borderColor: "var(--color-border-strong)", background: "var(--color-surface-tertiary)", color: "var(--color-text-muted)" }}>
-                    <p className="text-body-sm">No skills added yet — perfect if you're starting fresh.</p>
-                    <p className="text-caption mt-1">Added skills appear here with a slider to fine-tune your level.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-caption font-medium" style={{ color: "var(--color-text-muted)" }}>{skills.length} skill{skills.length > 1 ? "s" : ""} added</p>
-                    {skills.map((s) => (
-                      <div key={s.name} className="rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center gap-3" style={{ background: "var(--color-surface)", borderColor: "var(--color-border)" }}>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-medium text-sm truncate">{s.name}</span>
-                            <span className="text-caption font-mono px-2 py-0.5 rounded-full border" style={{ background: "var(--color-surface-tertiary)", borderColor: "var(--color-border)", color: levelColor(s.level) }}>
-                              {s.level}% · {levelLabel(s.level)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 mt-3">
-                            <input
-                              type="range"
-                              min={0}
-                              max={100}
-                              value={s.level}
-                              onChange={(e) => updateSkillLevel(s.name, parseInt(e.target.value, 10))}
-                              className="flex-1 accent-[var(--violet-500)]"
-                              aria-label={`${s.name} level`}
-                            />
-                            <div className="h-2 flex-1 rounded-full overflow-hidden hidden sm:block" style={{ background: "var(--color-border)" }}>
-                              <div className="h-full rounded-full transition-[width] duration-200" style={{ width: `${s.level}%`, background: levelColor(s.level) }} />
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeSkill(s.name)}
-                          className="btn btn-ghost btn-icon self-start sm:self-center"
-                          aria-label={`Remove ${s.name}`}
-                          title="Remove"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    ))}
-                    <button type="button" onClick={() => setSkills([])} className="text-caption inline-flex items-center gap-1 hover:underline" style={{ color: "var(--color-text-muted)" }}>
-                      <X size={12} /> Clear all
+              <div className="mt-3 flex flex-wrap gap-2">
+                {POPULAR_SKILLS.map((s) => {
+                  const added = skills.some((k) => k.name.toLowerCase() === s.toLowerCase());
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => addSuggested(s)}
+                      disabled={added}
+                      className={cx("pill text-xs", added && "opacity-40 cursor-not-allowed")}
+                    >
+                      {s} {added ? <Check size={12} /> : <Plus size={12} />}
                     </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 min-h-[48px]">
+                {skills.length === 0 ? (
+                  <p className="text-caption" style={{ color: "var(--color-text-muted)" }}>No skills yet — you can skip this step.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {skills.map((s) => (
+                      <span
+                        key={s.name}
+                        className="pill inline-flex items-center gap-2"
+                        style={{ borderColor: "var(--color-border-strong)" }}
+                      >
+                        {s.name}
+                        <span className="text-caption font-mono" style={{ color: levelColor(s.level) }}>{levelLabel(s.level)}</span>
+                        <button type="button" onClick={() => removeSkill(s.name)} className="ml-1 -mr-1 grid place-items-center h-5 w-5 rounded-full hover:bg-surface-tertiary" aria-label={`Remove ${s.name}`}>
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))}
+                    <button type="button" onClick={() => setSkills([])} className="text-caption hover:underline" style={{ color: "var(--color-text-muted)" }}>Clear</button>
                   </div>
                 )}
               </div>
