@@ -1,4 +1,4 @@
-﻿# PadhAI — Backend
+# PadhAI — Backend
 
 The PadhAI backend is a FastAPI service that generates personalized learning
 paths from a learner's goal, using a TF-IDF + cosine-similarity course matcher
@@ -12,7 +12,9 @@ an LLM (Groq, via LangChain) for goal parsing and natural-language explanations.
 - **LangChain (`langchain-groq`)** — `ChatGroq` wrapper around the Groq API
 - **Model/solution.py** — the user's ML course matcher (kept in `../Model`)
 
-## Setup (with [uv](https://docs.astral.sh/uv/))
+## Setup
+
+### Option A — with [uv](https://docs.astral.sh/uv/) (recommended)
 
 ```bash
 cd backend
@@ -31,7 +33,33 @@ Alternatively, run any command through `uv` without activating the venv:
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
+### Option B — without uv (plain pip/venv)
+
+```bash
+cd backend
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
+
+pip install --upgrade pip
+pip install -r requirements.txt   # mirrored from pyproject.toml
+cp .env.example .env              # Windows: copy .env.example .env — then set GROQ_API_KEY
+python -m uvicorn app.main:app --reload --port 8000
+# or: uvicorn app.main:app --reload --port 8000
+```
+
+> Requires **Python 3.13+** (pinned `3.13.4` in `.python-version`). If you use 3.11/3.12, install will still work but check `requires-python` in `pyproject.toml`.
+
 The API docs are available at `http://127.0.0.1:8000/docs`.
+
+### Tests
+
+```bash
+uv run pytest          # with uv
+# Without uv (after activating .venv):
+# pytest
+# python -m pytest     # offline & deterministic — Groq calls are stubbed
+```
 
 ## Configuration (`.env`)
 

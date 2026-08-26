@@ -1,4 +1,4 @@
-﻿# PadhAI — Tera Learning, AI ke Saath
+# PadhAI — Tera Learning, AI ke Saath
 
 **Your goal. Your learning path. *Tera Goal, Tera Raasta, AI ke Saath.***
 
@@ -48,16 +48,39 @@ Learner Goal → Goal Understanding → Learner Profile → Skill Gap Analysis
 
 ### Backend
 
+**With uv (recommended):**
 ```powershell
 cd backend
 uv sync                                   # first time only
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
+**Without uv — plain pip/venv:**
+```powershell
+cd backend
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+# source .venv/bin/activate
+
+pip install --upgrade pip
+pip install -r requirements.txt           # uses pinned versions from pyproject.toml
+# set up env
+copy .env.example .env   # Windows
+# cp .env.example .env   # macOS / Linux
+# then edit .env and set GROQ_API_KEY
+
+uvicorn app.main:app --reload --port 8000
+# or: python -m uvicorn app.main:app --reload --port 8000
+```
+
 Health check: http://127.0.0.1:8000/api/health — API docs: http://127.0.0.1:8000/docs
 
 First boot builds a cached course catalog from `Data/train.csv`
 (`backend/app/ml/_catalog_cache.json`). Delete that file if you change the CSV.
+
+> **Requires Python 3.13+** — the repo pins `3.13.4` (`backend/.python-version`). With pip, make sure `python --version` is 3.13+ or adjust `requires-python` in `pyproject.toml`.
 
 ### Frontend
 
@@ -84,6 +107,10 @@ the browser, never placed in any `VITE_*` variable, and `.env` is gitignored.
 ```powershell
 cd backend
 uv run pytest          # offline & deterministic — Groq calls are stubbed
+# Without uv:
+# .venv\Scripts\activate
+# pytest
+# or: python -m pytest
 ```
 
 ### Deployment (Vercel + Render)
