@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Send } from "lucide-react";
+import { Send, Sparkles } from "lucide-react";
 import { useLearner } from "../store/useLearner";
 import { useDashboard, useMentorChat, useMentorHistory } from "../lib/hooks";
 import { Button, Card, EmptyState, Input, PageHeader, Skeleton } from "../components/ui";
-import { MentorMessage, MentorContextCard } from "../components/product.panels";
+import { MentorMessage, MentorContextCard, MentorTyping } from "../components/product.panels";
 
 interface Msg {
   role: "user" | "assistant";
@@ -57,23 +57,32 @@ export function Mentor() {
     });
   };
 
+  const chips = ["Why this step next?", "Am I on track?", "What to do this week?", "Prereq for React?", "Can I skip this?"];
+
   return (
     <div>
       <PageHeader
-        eyebrow="Mentor"
+        eyebrow="Mentor — Tera AI Guide"
         title="Contextual guidance"
-        description="Ask about your path. Responses stay grounded in your goal, progress, and the evidence base."
+        description="Short, pro bullets — grounded in your goal, path & evidence. No fluff."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        <Card className="flex flex-col h-[60vh] min-h-[420px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <Card className="flex flex-col h-[62vh] min-h-[440px]">
           <div className="flex-1 overflow-y-auto space-y-4 pr-1">
             {messages.length === 0 && (
-              <div className="h-full grid place-items-center text-center">
+              <div className="h-full grid place-items-center text-center p-6">
                 <EmptyState
                   title="Start a conversation"
-                  description="Try: “Why is this step next?” or “How do I close my React gap?”"
+                  description="PadhAI answers in 2-4 short bullets — value first, no paragraphs."
                 />
+                <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                  {chips.map((c) => (
+                    <button key={c} className="pill hover:border-brand hover:text-brand transition-colors text-caption" onClick={() => setInput(c)}>
+                      <Sparkles size={12} /> {c}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             {messages.map((m, i) => (
@@ -85,19 +94,27 @@ export function Mentor() {
                 variant={m.role}
               />
             ))}
-            {chat.isPending && (
-              <MentorMessage message="Thinking…" variant="assistant" />
-            )}
+            {chat.isPending && <MentorTyping />}
             <div ref={endRef} />
           </div>
-          <div className="mt-3 flex gap-2 border-t border-default pt-3">
+          {messages.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 py-2 border-t border-default">
+              {chips.slice(0, 4).map((c) => (
+                <button key={c} className="pill text-caption hover:border-brand hover:text-brand" onClick={() => setInput(c)}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="mt-1 flex gap-2 border-t border-default pt-3">
             <Input
-              placeholder="Ask your mentor…"
+              placeholder="Ask in Hinglish or English — e.g. Why is JS next?"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
+              disabled={chat.isPending}
             />
-            <Button onClick={send} disabled={chat.isPending || !input.trim()} aria-label="Send">
+            <Button onClick={send} disabled={chat.isPending || !input.trim()} aria-label="Send" loading={chat.isPending}>
               <Send size={16} />
             </Button>
           </div>

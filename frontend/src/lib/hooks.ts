@@ -44,6 +44,27 @@ export function useProfile(learnerId: string | null) {
   });
 }
 
+export function useMyLearners(enabled = true) {
+  return useQuery({
+    queryKey: ["profile", "list", "me"] as const,
+    queryFn: () => api.profile.listMy(),
+    enabled,
+    retry: false,
+  });
+}
+
+export function useUpdateProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { learnerId: string; data: ProfileCreate }) =>
+      api.profile.update(vars.learnerId, vars.data),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: qk.profile(vars.learnerId) });
+      qc.invalidateQueries({ queryKey: qk.dashboard(vars.learnerId) });
+    },
+  });
+}
+
 export function useAnalyzeGoal() {
   return useMutation({
     mutationFn: (goal: string) => api.goals.analyze(goal),
@@ -62,8 +83,33 @@ export function useCreateProfile() {
 }
 
 export function useGeneratePath(learnerId: string | null) {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api.paths.generate(learnerId!),
+    onSuccess: () => {
+      if (learnerId) {
+        qc.invalidateQueries({ queryKey: qk.dashboard(learnerId) });
+        qc.invalidateQueries({ queryKey: qk.recommendations(learnerId) });
+      }
+      // new path id unknown until dashboard refetch, invalidate all path queries
+      qc.invalidateQueries({ queryKey: ["path"] });
+    },
+  });
+}
+
+export function useAdaptPath() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (pathId: string) => api.paths.adapt(pathId),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: qk.path(data.path_id) });
+      // keep previous path fetchable for undo
+      if ((data as { previous_path_id?: string | null }).previous_path_id) {
+        qc.invalidateQueries({ queryKey: qk.path((data as { previous_path_id: string }).previous_path_id) });
+      }
+      qc.invalidateQueries({ queryKey: qk.dashboard(data.learner_id) });
+      qc.invalidateQueries({ queryKey: qk.recommendations(data.learner_id) });
+    },
   });
 }
 
@@ -91,6 +137,7 @@ export function useUpdateProgress() {
       completionPercentage: number;
       status?: string;
       timeSpentHours?: number;
+      pathId?: string | null;
     }) =>
       api.progress.update(
         vars.learnerId,
@@ -101,6 +148,9 @@ export function useUpdateProgress() {
       ),
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: qk.dashboard(vars.learnerId) });
+      if (vars.pathId) qc.invalidateQueries({ queryKey: qk.path(vars.pathId) });
+      else qc.invalidateQueries({ queryKey: ["path"] });
+      qc.invalidateQueries({ queryKey: qk.recommendations(vars.learnerId) });
     },
   });
 }
@@ -115,14 +165,21 @@ export function useFeedback() {
       reason?: string;
     }) => api.feedback.send(vars.learnerId, vars.resourceId, vars.helpful, vars.reason),
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries();
+      qc.invalidateQueries({ queryKey: qk.dashboard(vars.learnerId) });
+      qc.invalidateQueries({ queryKey: qk.recommendations(vars.learnerId) });
+      qc.invalidateQueries({ queryKey: ["path"] });
     },
   });
 }
 
 export function useMentorChat(learnerId: string | null) {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (message: string) => api.mentor.chat(learnerId!, message),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.mentorHistory(learnerId ?? "") });
+      qc.invalidateQueries({ queryKey: qk.dashboard(learnerId ?? "") });
+    },
   });
 }
 
@@ -138,5 +195,14 @@ export function useExplainStep() {
   return useMutation({
     mutationFn: (vars: { pathId: string; stepId: string }) =>
       api.paths.explainStep(vars.pathId, vars.stepId),
+  });
+}
+
+export function useAuthMe(enabled: boolean) {
+  return useQuery({
+    queryKey: ["auth", "me"] as const,
+    queryFn: () => api.auth.me(),
+    enabled,
+    retry: false,
   });
 }

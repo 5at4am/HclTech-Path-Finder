@@ -16,6 +16,7 @@ import {
   Moon,
 } from "lucide-react";
 import { useLearner } from "../store/useLearner";
+import { useAuth } from "../store/useAuth";
 import { Button, Badge, Card } from "../components/ui";
 
 // Applying Linear's system: violet #8338EC maps to Linear #5e6ad2, hairline rgba(255,255,255,.09) maps to #23252a, display -1.8px tracking, 8px buttons/12px cards, surface ladder canvas→surface.
@@ -70,12 +71,13 @@ type Track = keyof typeof TRACKS;
 
 export function Landing() {
   const { learnerId, theme, toggleTheme } = useLearner();
+  const { token } = useAuth();
   const navigate = useNavigate();
   const [track, setTrack] = useState<Track>("AI/ML");
 
   useEffect(() => {
-    if (learnerId) navigate("/dashboard", { replace: true });
-  }, [learnerId, navigate]);
+    if (token && learnerId) navigate("/dashboard", { replace: true });
+  }, [token, learnerId, navigate]);
 
   return (
     <div className="min-h-screen bg-bg text-primary relative overflow-hidden">
@@ -107,9 +109,25 @@ export function Landing() {
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/onboarding")}>
-            Get started
-          </Button>
+          {token ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => navigate(learnerId ? "/dashboard" : "/onboarding")}>
+                {learnerId ? "Dashboard" : "Get started"}
+              </Button>
+              <Button size="sm" onClick={() => navigate(learnerId ? "/dashboard" : "/onboarding")}>
+                {learnerId ? "Continue" : "Build path"}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
+                Sign in
+              </Button>
+              <Button size="sm" onClick={() => navigate("/register")}>
+                Sign up
+              </Button>
+            </>
+          )}
         </div>
       </header>
 
@@ -134,7 +152,7 @@ export function Landing() {
               assessments ka ordered path banate hain — har step ka reason ke saath, backed by real learner reviews.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg" onClick={() => navigate("/onboarding")}>
+              <Button size="lg" onClick={() => navigate(token ? "/onboarding" : "/register")}>
                 Build my learning path <ArrowRight size={18} />
               </Button>
               <Button variant="secondary" size="lg" onClick={() => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })}>
@@ -340,7 +358,11 @@ export function Landing() {
                 </div>
               </div>
               <div className="mt-6">
-                <Button onClick={() => navigate("/onboarding")}>
+                <Button
+                  onClick={() =>
+                    navigate(!token ? "/register" : !learnerId ? "/onboarding" : "/simulation")
+                  }
+                >
                   Try the simulation <ArrowRight size={16} />
                 </Button>
               </div>
@@ -422,7 +444,10 @@ export function Landing() {
               Start with your goal. PadhAI does the sequencing.
             </p>
           </div>
-          <Button size="lg" onClick={() => navigate("/onboarding")}>
+          <Button
+            size="lg"
+            onClick={() => navigate(!token ? "/register" : !learnerId ? "/onboarding" : "/dashboard")}
+          >
             Build my learning path <ArrowRight size={18} />
           </Button>
         </div>

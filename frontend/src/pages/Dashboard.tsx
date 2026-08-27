@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { Compass, GitBranch, Lightbulb, MessagesSquare, PlayCircle, TrendingUp } from "lucide-react";
+import { Clock, Compass, GitBranch, Lightbulb, MessagesSquare, PlayCircle, Sparkles, Target, TrendingUp, Unlock } from "lucide-react";
 import { useLearner } from "../store/useLearner";
-import { useDashboard, useRecommendations, useGeneratePath } from "../lib/hooks";
+import { useDashboard, useRecommendations, useGeneratePath, usePath } from "../lib/hooks";
 import {
   Button,
   Card,
@@ -12,8 +12,8 @@ import {
   Skeleton,
   cx,
 } from "../components/ui";
-import { ResourceCard, RecommendationCard, SkillGapCard } from "../components/product.cards";
-import { ProgressBar } from "../components/ui";
+import { RecommendationCard, SkillGapCard } from "../components/product.cards";
+import { Badge, ProgressBar } from "../components/ui";
 
 export function Dashboard() {
   const { learnerId } = useLearner();
@@ -21,6 +21,13 @@ export function Dashboard() {
   const { data, isLoading, isError, error, refetch } = useDashboard(learnerId);
   const recs = useRecommendations(learnerId);
   const generate = useGeneratePath(learnerId);
+  const path = usePath(data?.path_id ?? null);
+  const continueStepId = (() => {
+    if (!data?.continue_resource || !path.data) return null;
+    const rid = data.continue_resource.id;
+    const hit = path.data.steps.find((s) => s.resource_id === rid);
+    return hit?.id ?? null;
+  })();
 
   if (isLoading) return <DashboardSkeleton />;
   if (isError)
@@ -81,13 +88,17 @@ export function Dashboard() {
           <div>
             <SectionHeader title="Continue where you left off" />
             {data.continue_resource ? (
-              <ResourceCard
+              <ContinueCard
                 resource={data.continue_resource}
-                footer={
-                  <div className="flex items-center gap-3">
-                    <ProgressBar value={data.continue_pct} className="flex-1" />
-                    <span className="text-caption text-muted tabular-nums">{data.continue_pct}%</span>
-                  </div>
+                pct={data.continue_pct}
+                remaining={data.continue_remaining_hours}
+                unlocks={data.continue_unlocks}
+                reason={data.continue_reason}
+                studyPerWeek={data.study_time_per_week}
+                onOpen={() =>
+                  continueStepId && data.path_id
+                    ? navigate(`/path/${data.path_id}/step/${continueStepId}`)
+                    : navigate("/path")
                 }
               />
             ) : (
@@ -101,12 +112,16 @@ export function Dashboard() {
             <SectionHeader title="What to do next" />
             <Card className="bg-surface-secondary">
               <ul className="space-y-2">
-                {data.next_actions.map((a, i) => (
-                  <li key={i} className="flex items-start gap-2 text-body-sm text-secondary">
-                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand shrink-0" />
-                    {a}
-                  </li>
-                ))}
+                {data.next_actions.map((a, i) => {
+                  const isResume = a.startsWith("Resume:");
+                  const isGap = a.startsWith("Gap focus:");
+                  return (
+                    <li key={i} className="flex items-start gap-2 text-body-sm">
+                      <span className={cx("mt-1 h-1.5 w-1.5 rounded-full shrink-0", isResume ? "bg-brand" : isGap ? "bg-accent" : "bg-muted")} />
+                      <span className={isResume ? "text-primary font-medium" : isGap ? "text-accent" : "text-secondary"}>{a}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </Card>
           </div>
@@ -184,6 +199,74 @@ export function Dashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ContinueCard({
+  resource,
+  pct,
+  remaining,
+  unlocks,
+  reason,
+  studyPerWeek,
+  onOpen,
+}: {
+  resource: { title: string; domain: string; difficulty: string; duration_hours: number; skills_gained: string[]; phase: string; type: string; rating: number };
+  pct: number;
+  remaining: number;
+  unlocks: string[];
+  reason: string;
+  studyPerWeek: number;
+  onOpen: () => void;
+}) {
+  const weeks = remaining > 0 ? (remaining / Math.max(1, studyPerWeek)).toFixed(1) : "0";
+  const why = reason ? reason.slice(0, 110) : `Closes gap in ${(resource.skills_gained.slice(0, 2).join(", ") || resource.domain).replace(/_/g, " ")}`;
+  return (
+    <Card className="p-0 overflow-hidden">
+      <div className="px-5 pt-5 pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <Badge tone="brand">{resource.domain}</Badge>
+              <span className="text-caption text-muted">{resource.phase}</span>
+              <Badge tone={resource.difficulty === "beginner" ? "success" : resource.difficulty === "advanced" ? "warning" : "brand"}>{resource.difficulty}</Badge>
+              <span className="meta inline-flex items-center gap-1"><Clock size={12} />{resource.duration_hours}h total</span>
+            </div>
+            <h3 className="text-title text-primary leading-snug">{resource.title}</h3>
+          </div>
+          <Button size="sm" onClick={onOpen}><GitBranch size={14} /> Open</Button>
+        </div>
+
+        <div className="mt-4 flex items-center gap-3">
+          <ProgressBar value={pct} className="flex-1" />
+          <span className="text-caption font-medium tabular-nums">{pct}%</span>
+          <span className="text-caption text-muted">· {remaining}h left · {weeks}w @ {studyPerWeek}h/w</span>
+        </div>
+
+        <ul className="mt-4 space-y-2">
+          <li className="flex gap-2 text-body-sm leading-snug">
+            <Target size={14} className="text-brand mt-0.5 shrink-0" />
+            <span className="text-secondary"><span className="font-medium text-primary">Why now:</span> {why}</span>
+          </li>
+          <li className="flex gap-2 text-body-sm leading-snug">
+            <Clock size={14} className="text-muted mt-0.5 shrink-0" />
+            <span className="text-secondary"><span className="font-medium text-primary">Cost:</span> {remaining}h left · {resource.difficulty} · {weeks} weeks at {studyPerWeek}h/week</span>
+          </li>
+          <li className="flex gap-2 text-body-sm leading-snug">
+            <Unlock size={14} className="text-success mt-0.5 shrink-0" />
+            <span className="text-secondary"><span className="font-medium text-primary">Leverage:</span> {unlocks.length ? `Unlocks ${unlocks.join(", ")}` : "Unlocks next phase — keep momentum"}</span>
+          </li>
+        </ul>
+
+        {resource.skills_gained.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {resource.skills_gained.slice(0, 4).map((s) => (
+              <span key={s} className="pill text-caption"><Sparkles size={11} /> {s.replace(/_/g, " ")}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </Card>
   );
 }
 

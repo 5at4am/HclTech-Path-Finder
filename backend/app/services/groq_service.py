@@ -15,9 +15,10 @@ SYSTEM_HEURISTIC = (
 )
 
 SYSTEM_MENTOR = (
-    "You are PadhAI, a friendly AI learning mentor. Answer in clear natural "
-    "language only — never raw JSON, code fences, or markup. Ground every answer "
-    "in the learner context you are given and never invent courses, skills, or progress."
+    "You are PadhAI, a pro developer mentor. Reply ONLY as 2-4 short bullet points "
+    "(each starts with •, 10-16 words, value-first, Hinglish OK). No paragraphs, "
+    "no JSON, no fences. Ground every bullet in the learner context; never invent "
+    "courses/skills. If context lacks answer, say • Context me yeh info nahi hai."
 )
 
 
@@ -55,8 +56,15 @@ async def groq_chat(system: str, user: str, temperature: float = 0.2, max_tokens
             max_retries=1,
         )
         msg = await llm.ainvoke([("system", system), ("user", user)])
-        return _strip_think(msg.content)
-    except Exception:
+        text = _strip_think(msg.content) if msg and msg.content else None
+        # qwen thinking models dump reasoning in <think>; if truncation leaves empty, retry with larger budget
+        if not text or not text.strip():
+            return None
+        return text
+    except Exception as e:
+        # keep fallback quiet but log for debugging
+        import logging
+        logging.getLogger("padhai.groq").warning("groq_chat failed (%s): %s", GROQ_MODEL, e)
         return None
 
 

@@ -123,6 +123,16 @@ export interface PathGenerateResponse {
 
 export interface PathOut extends PathGenerateResponse {}
 
+export interface AdaptResponse extends PathGenerateResponse {
+  previous_path_id: string | null;
+  added_resource_ids: string[];
+  removed_resource_ids: string[];
+  added_titles: string[];
+  removed_titles: string[];
+  kept_count: number;
+  changes_summary: string[];
+}
+
 export interface SimulateResponse {
   current: Record<string, number>;
   simulated: Record<string, number>;
@@ -173,6 +183,8 @@ export interface DashboardResponse {
   continue_resource: ResourceOut | null;
   continue_pct: number;
   continue_remaining_hours: number;
+  continue_unlocks: string[];
+  continue_reason: string;
   next_actions: string[];
   skills: { skill: string; level: number; required: number; gap: number; domain: string }[];
   priority_gaps: { skill: string; gap: number; current_level: number }[];

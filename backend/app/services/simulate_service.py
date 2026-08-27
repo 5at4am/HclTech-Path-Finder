@@ -23,7 +23,14 @@ def _estimate_months(learner_like, resources, model, weekly) -> tuple[int, int]:
     profile_text = _build_profile_text(learner_like)
     model_scores = model.score(profile_text)
     target_domains = _target_domains(learner_like)
-    ordered = _order_for_path(_select_for_goal(resources, target_domains))
+    # gap-aware selection mirrors path_generator.generate
+    from .skill_gap_service import compute_gaps as _cg
+    try:
+        gaps, _ = _cg(learner_like)
+        gaps_set = {g.skill for g in gaps}
+    except Exception:
+        gaps_set = None
+    ordered = _order_for_path(_select_for_goal(resources, target_domains, model_scores=model_scores, gaps_set=gaps_set))
     total = sum(r.duration_hours for r in ordered)
     weeks = total / max(1, weekly)
     return max(1, round(weeks / 4.3)), total
@@ -68,7 +75,12 @@ def simulate(db: Session, learner_id: str, changes: dict) -> SimulateResponse | 
     profile_text = _build_profile_text(sim_like)
     model_scores = model.score(profile_text)
     target_domains = _target_domains(sim_like)
-    ordered = _order_for_path(_select_for_goal(resources, target_domains))
+    try:
+        gaps, _ = compute_gaps(sim_like)
+        gaps_set = {g.skill for g in gaps}
+    except Exception:
+        gaps_set = None
+    ordered = _order_for_path(_select_for_goal(resources, target_domains, model_scores=model_scores, gaps_set=gaps_set))
     unlocks_map = build_unlocks([r.id for r in ordered], resources)
 
     completed_set = set()

@@ -164,6 +164,31 @@ export function FeedbackControl({
 
 
 /* ------------------------------- Mentor ----------------------------------- */
+function BulletList({ text }: { text: string }) {
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const bullets = lines.filter((l) => l.startsWith("•") || l.startsWith("-") || l.startsWith("*"));
+  if (bullets.length >= 2) {
+    return (
+      <ul className="space-y-1.5">
+        {bullets.map((b, i) => (
+          <li key={i} className="flex gap-2 text-body-sm leading-snug">
+            <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-brand shrink-0" />
+            <span>{b.replace(/^[•\-\*]\s*/, "")}</span>
+          </li>
+        ))}
+        {lines.filter((l) => !bullets.includes(l)).length > 0 && (
+          <li className="text-body-sm text-secondary mt-1">{lines.filter((l) => !bullets.includes(l)).join(" ")}</li>
+        )}
+      </ul>
+    );
+  }
+  // fallback: short paragraph but clamped
+  return <p className="text-body-sm leading-relaxed whitespace-pre-wrap">{text}</p>;
+}
+
 export function MentorMessage({
   message,
   sources,
@@ -176,36 +201,58 @@ export function MentorMessage({
   variant?: "user" | "assistant";
 }) {
   const isUser = variant === "user";
-  return (
-    <div className={cx("flex gap-3", isUser && "flex-row-reverse")}>
-      <div
-        className={cx(
-          "grid h-8 w-8 shrink-0 place-items-center rounded-full text-white",
-          isUser ? "bg-surface-tertiary text-secondary" : "bg-brand",
-        )}
-        aria-hidden
-      >
-        {isUser ? "You" : <MessageSquareQuote size={15} />}
-      </div>
-      <div className={cx("max-w-[80%] space-y-2", isUser && "items-end text-right")}>
-        <div
-          className={cx(
-            "rounded-panel border p-3 text-body",
-            isUser ? "border-default bg-surface-secondary" : "border-brand-soft bg-brand-muted",
-          )}
-        >
+  if (isUser) {
+    return (
+      <div className="flex gap-3 flex-row-reverse">
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-tertiary text-secondary text-caption font-medium">
+          You
+        </div>
+        <div className="max-w-[78%] rounded-panel border border-default bg-surface-secondary px-4 py-3 text-body-sm">
           {message}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex gap-3">
+      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand text-white" aria-hidden>
+        <MessageSquareQuote size={14} />
+      </div>
+      <div className="max-w-[82%] space-y-2">
+        <div className="rounded-panel border border-brand-soft bg-brand-muted px-4 py-3">
+          <BulletList text={message} />
         </div>
         {evidence && <EvidenceCard evidence={evidence} />}
         {sources && sources.length > 0 && (
-          <div className={cx("flex flex-wrap gap-1.5", isUser && "justify-end")}>
-            {sources.slice(0, 4).map((s, i) => (
-              <span key={i} className="pill text-caption">
-                {String(s.label ?? s.type ?? s.title ?? "source")}
-              </span>
-            ))}
+          <div className="flex flex-wrap gap-1.5">
+            {sources.slice(0, 4).map((s, i) => {
+              const label = String(s.label ?? s.title ?? s.type ?? "source");
+              const isCatalog = s.type === "catalog_match";
+              return (
+                <span key={i} className={cx("pill text-caption", isCatalog && "border-brand-soft text-brand")}>
+                  {label}
+                  {isCatalog && (s as { score?: number }).score ? ` ${(s as {score:number}).score}` : ""}
+                </span>
+              );
+            })}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+export function MentorTyping() {
+  return (
+    <div className="flex gap-3">
+      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand text-white">
+        <MessageSquareQuote size={14} />
+      </div>
+      <div className="rounded-panel border border-brand-soft bg-brand-muted px-4 py-3 flex items-center gap-1">
+        <span className="h-1.5 w-1.5 rounded-full bg-brand animate-bounce" />
+        <span className="h-1.5 w-1.5 rounded-full bg-brand animate-bounce [animation-delay:120ms]" />
+        <span className="h-1.5 w-1.5 rounded-full bg-brand animate-bounce [animation-delay:240ms]" />
+        <span className="text-caption text-muted ml-1">soch raha hai…</span>
       </div>
     </div>
   );

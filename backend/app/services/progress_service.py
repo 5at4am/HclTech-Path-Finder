@@ -70,6 +70,8 @@ def update_progress(
     completed_courses = set(learner.completed_courses or [])
     if is_complete:
         completed_courses.add(resource_id)
+    else:
+        completed_courses.discard(resource_id)
     learner.completed_courses = list(completed_courses)
     learner.learning_history = list(set(learner.learning_history or []) | {resource_id})
 

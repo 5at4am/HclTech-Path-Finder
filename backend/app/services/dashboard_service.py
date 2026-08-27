@@ -15,12 +15,28 @@ def _streak(db: Session, learner_id: str) -> int:
         .order_by(Progress.updated_at)
         .all()
     )
-    days = set()
+    day_set = set()
     for (ts,) in rows:
         if ts:
-            days.add(ts.date().isoformat())
-    # simple streak: count distinct active days (proxy for consecutive engagement)
-    return len(days)
+            # normalize to date (handle naive/aware)
+            d = ts.date() if hasattr(ts, "date") else ts
+            day_set.add(d)
+    if not day_set:
+        return 0
+    sorted_days = sorted(day_set, reverse=True)
+    # consecutive streak ending at most recent active day
+    streak = 1
+    for i in range(1, len(sorted_days)):
+        delta = (sorted_days[i - 1] - sorted_days[i]).days
+        if delta == 1:
+            streak += 1
+        elif delta == 0:
+            continue
+        else:
+            break
+    # if most recent day is not today/yesterday, streak still counts but
+    # we keep the value as computed (historical consecutive run)
+    return streak
 
 
 def build_dashboard(db: Session, learner_id: str) -> DashboardResponse | None:
@@ -52,10 +68,12 @@ def build_dashboard(db: Session, learner_id: str) -> DashboardResponse | None:
     covered = sum(1 for sk, req in required.items() if int(cur.get(sk, 0)) >= req * 0.6)
     skills_covered = f"{covered}/{len(required)}"
 
-    # continue resource = current step
+    # continue resource = current step — pro value points
     continue_resource = None
     continue_pct = 0
     continue_remaining = 0.0
+    continue_unlocks: list[str] = []
+    continue_reason = ""
     current_step = next((s for s in steps if s.status == "current"), None)
     if current_step:
         r = db.get(Resource, current_step.resource_id)
@@ -63,20 +81,38 @@ def build_dashboard(db: Session, learner_id: str) -> DashboardResponse | None:
             continue_resource = _resource_out(r)
             continue_pct = current_step.completion_percentage
             continue_remaining = round(r.duration_hours * (1 - continue_pct / 100), 1)
+            continue_reason = current_step.reason or ""
+            # unlocks: what this step unlocks (reverse prereq map, path-scoped)
+            for s in steps:
+                if current_step.resource_id in (s.prerequisites or []):
+                    rr = db.get(Resource, s.resource_id)
+                    if rr:
+                        continue_unlocks.append(rr.title)
 
-    # next actions
+    # next actions — short, pro, value-driven (no generic paragraph)
     next_actions = []
-    if current_step:
-        r = db.get(Resource, current_step.resource_id)
-        if r:
-            next_actions.append(f"Continue {r.title}")
-    upcoming = [s for s in steps if s.status in ("recommended", "locked")][:3]
+    if current_step and continue_resource:
+        # 1. Resume line with leverage
+        nxt = f"Resume: {continue_resource.title} — {continue_pct}% done · {continue_remaining}h left"
+        if continue_unlocks:
+            nxt += f" · unlocks {continue_unlocks[0]}"
+            if len(continue_unlocks) > 1:
+                nxt += f" +{len(continue_unlocks)-1}"
+        next_actions.append(nxt)
+    # 2. Upcoming with status hint
+    upcoming = [s for s in steps if s.status in ("recommended", "locked")][:2]
     for s in upcoming:
         r = db.get(Resource, s.resource_id)
         if r:
-            next_actions.append(f"Up next: {r.title}")
+            tag = "locked" if s.status == "locked" else "next"
+            pr = f" (needs {', '.join(s.prerequisites[:1])})" if s.status == "locked" and s.prerequisites else ""
+            next_actions.append(f"{tag}: {r.title} · {r.duration_hours}h · {r.difficulty}{pr}")
+    # 3. Gap focus (top gap)
+    if gaps:
+        g = gaps[0]
+        next_actions.append(f"Gap focus: {g.skill.replace('_',' ')} {g.current_level}->{g.required_level} (+{g.gap})")
     if not next_actions:
-        next_actions = ["Your path is complete — explore electives or review."]
+        next_actions = ["Path complete — review or add elective."]
 
     skill_rows = []
     for sk, req in required.items():
@@ -123,7 +159,9 @@ def build_dashboard(db: Session, learner_id: str) -> DashboardResponse | None:
         continue_resource=continue_resource,
         continue_pct=continue_pct,
         continue_remaining_hours=continue_remaining,
-        next_actions=next_actions[:5],
+        continue_unlocks=continue_unlocks[:3],
+        continue_reason=continue_reason,
+        next_actions=next_actions[:4],
         skills=skill_rows,
         priority_gaps=priority_gaps,
         recent_feedback=recent_feedback,

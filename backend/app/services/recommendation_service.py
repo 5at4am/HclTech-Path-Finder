@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from ..models import Learner, Resource
+from ..models import Feedback, Learner, Resource
 from ..schemas import (
     ProfileResponse,
     RecommendationOut,
@@ -82,6 +82,15 @@ def recommend(db: Session, learner_id: str, limit: int = 14) -> RecommendationsR
     model = get_model(resources)
     profile_text = _build_profile_text(learner)
     model_scores = model.score(profile_text)
+    # feedback bias — same as path generation so recommendations adapt instantly
+    try:
+        for fb in db.query(Feedback).filter(Feedback.learner_id == learner_id).all():
+            if not fb.helpful and fb.reason in ("too_difficult","not_interested","too_long","not_relevant"):
+                model_scores[fb.resource_id] = max(0.0, float(model_scores.get(fb.resource_id,0.0)) - 0.4)
+            elif fb.helpful:
+                model_scores[fb.resource_id] = min(1.0, float(model_scores.get(fb.resource_id,0.0)) + 0.15)
+    except Exception:
+        pass
 
     from .skill_gap_service import compute_gaps
     gaps, _ = compute_gaps(learner)

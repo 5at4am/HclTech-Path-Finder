@@ -219,6 +219,18 @@ class PathGenerateResponse(BaseModel):
     steps: list[LearningStepOut]
 
 
+class AdaptResponse(PathGenerateResponse):
+    """PathGenerateResponse + diff metadata for the improved Adapt dialog."""
+
+    previous_path_id: str | None = None
+    added_resource_ids: list[str] = []
+    removed_resource_ids: list[str] = []
+    added_titles: list[str] = []
+    removed_titles: list[str] = []
+    kept_count: int = 0
+    changes_summary: list[str] = []
+
+
 class PathOut(BaseModel):
     path_id: str
     learner_id: str
@@ -326,6 +338,8 @@ class DashboardResponse(BaseModel):
     continue_resource: Optional[ResourceOut] = None
     continue_pct: int = 0
     continue_remaining_hours: float = 0.0
+    continue_unlocks: list[str] = []
+    continue_reason: str = ""
     next_actions: list[str] = []
     skills: list[dict[str, Any]] = []
     priority_gaps: list[dict[str, Any]] = []
@@ -336,3 +350,46 @@ class HealthResponse(BaseModel):
     status: str
     version: str = "1.0.0"
     groq_configured: bool
+
+
+# ---------- Auth ----------
+class RegisterRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=6, max_length=128)
+
+    @field_validator("name", "email", "password")
+    @classmethod
+    def _strip(cls, v: str) -> str:
+        return v.strip()
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, v: str) -> str:
+        v = v.strip().lower()
+        if "@" not in v or "." not in v.split("@")[-1]:
+            raise ValueError("Invalid email address.")
+        return v
+
+
+class LoginRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, v: str) -> str:
+        return v.strip().lower()
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    name: str
+    created_at: Optional[datetime] = None
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse

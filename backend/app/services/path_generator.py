@@ -4,7 +4,7 @@ import uuid
 from collections import defaultdict
 from sqlalchemy.orm import Session
 
-from ..models import Learner, LearningPath, LearningStep, Resource
+from ..models import Feedback, Learner, LearningPath, LearningStep, Resource
 from ..schemas import (
     LearningStepOut,
     PathGenerateResponse,
@@ -139,21 +139,31 @@ def _select_for_goal(
     resources: list[Resource],
     target_domains: set[str] | None = None,
     top_k: int = 14,
+    model_scores: dict[str, float] | None = None,
+    gaps_set: set[str] | None = None,
 ) -> list[Resource]:
-    """Select the resources for a learner's path — deterministically.
+    """Select resources for a learner's path — ML-driven but prerequisite-aware.
 
-    The ML model is NOT the selector. We choose by explicit catalog structure so
-    the path is correct for every domain: in-domain resources first (or the whole
-    catalog when the goal maps to no specific domain), then genuine prerequisites
-    pulled in from any domain. Ordering is left to _order_for_path (topological +
-    difficulty). The model still drives the "Match %"/reason text elsewhere, but it
-    no longer decides *which* courses belong on the path — that's what previously
-    let blockchain/Python/Flask leak into a Frontend plan.
+    User-facing value: picks are ranked by your goal text (TF-IDF cosine from
+    Model/solution.py rank_neighbors) blended with your skill gaps, so a
+    Frontend goal now sees HTML/CSS/JS/React before ML courses. Prerequisites
+    are still pulled in, order stays in _order_for_path.
     """
     in_domain = (
         [r for r in resources if r.domain in target_domains]
         if target_domains else list(resources)
     )
+    # ML + gap blending: 0.75*model_relevance + 0.25*gap_boost makes weak required
+    # skills surface even if TF-IDF alone is noisy.
+    if model_scores is not None:
+        def _blended(r: Resource) -> float:
+            mr = float(model_scores.get(r.id, 0.0))
+            gap_boost = 0.0
+            if gaps_set:
+                skills = r.skills_gained or []
+                gap_boost = 1.0 if any(s in gaps_set for s in skills) else 0.0
+            return 0.75 * mr + 0.25 * gap_boost
+        in_domain = sorted(in_domain, key=_blended, reverse=True)
     picks = {r.id for r in in_domain[:top_k]}
 
     by_id = {r.id: r for r in resources}
@@ -250,16 +260,34 @@ def generate(db: Session, learner_id: str) -> PathGenerateResponse | None:
     if not learner:
         return None
     resources = db.query(Resource).all()
-    _, coverage = compute_gaps(learner)
+    gaps, coverage = compute_gaps(learner)
+    gaps_set = {g.skill for g in gaps}
 
-    # The ML model is used for *display* (Match %, reason wording) only — not for
-    # selecting which courses belong on the path. Selection is deterministic.
+    # ML now drives selection: 0.75*TF-IDF + 0.25*gap_boost (user feels gap-relevant picks)
     model = get_model(resources)
     profile_text = _build_profile_text(learner)
     model_scores = model.score(profile_text)
+    # Apply feedback bias: too_difficult / not_interested / too_long penalize,
+    # helpful boosts — so regenerate reflects what user felt (Rohan/Priya story)
+    try:
+        fbs = db.query(Feedback).filter(Feedback.learner_id == learner.id).all()
+        for fb in fbs:
+            if not fb.helpful:
+                if fb.reason in ("too_difficult", "not_interested", "too_long", "not_relevant"):
+                    model_scores[fb.resource_id] = max(0.0, float(model_scores.get(fb.resource_id, 0.0)) - 0.4)
+                    # boost its prerequisites so they surface next time
+                    res = next((r for r in resources if r.id == fb.resource_id), None)
+                    if res:
+                        for pre in res.prerequisites or []:
+                            model_scores[pre] = min(1.0, float(model_scores.get(pre, 0.0)) + 0.3)
+                # already_know already handled via completed_courses
+            else:
+                model_scores[fb.resource_id] = min(1.0, float(model_scores.get(fb.resource_id, 0.0)) + 0.15)
+    except Exception:
+        pass
     target_domains = _target_domains(learner)
 
-    included = _select_for_goal(resources, target_domains)
+    included = _select_for_goal(resources, target_domains, model_scores=model_scores, gaps_set=gaps_set)
     included = _ensure_capstone(included, resources, model_scores)
     ordered = _order_for_path(included)
 

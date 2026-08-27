@@ -19,9 +19,9 @@ services:
         value: qwen/qwen3.6-27b
       # Point these at your real Vercel URL(s) after the first deploy.
       - key: FRONTEND_URL
-        value: https://your-frontend.vercel.app
+        value: https://padhai-path-finder.vercel.app
       - key: CORS_ORIGINS
-        value: https://your-frontend.vercel.app
+        value: https://padhai-path-finder.vercel.app,https://padhai-path-finder-*.vercel.app,https://path-finder-api.vercel.app
       # NOTE: SQLite lives on Render's ephemeral disk on the free tier —
       # seeded data is rebuilt on every deploy/restart (fine for a demo).
       # For durable data, upgrade to a persistent disk or swap DATABASE_URL

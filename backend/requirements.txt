@@ -9,3 +9,5 @@ pandas
 numpy
 langchain-groq
 groq==0.13.0
+PyJWT==2.13.0
+bcrypt==5.0.0

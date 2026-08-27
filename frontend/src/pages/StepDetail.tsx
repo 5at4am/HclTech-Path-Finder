@@ -35,11 +35,14 @@ export function StepDetail() {
 
   const setProgress = (value: number, status?: string) => {
     if (!learnerId) return;
+    const resolvedStatus =
+      status ?? (value >= 100 ? "completed" : value > 0 ? "current" : "not_started");
     updateProgress.mutate({
       learnerId,
       resourceId: step.resource_id,
       completionPercentage: value,
-      status: status ?? (value >= 100 ? "completed" : value > 0 ? "current" : undefined),
+      status: resolvedStatus,
+      pathId,
     });
   };
 

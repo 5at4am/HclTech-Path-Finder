@@ -13,7 +13,7 @@ from .database import SessionLocal, engine, get_db
 from .models import Base
 from .seed import seed
 from .ml.ml_adapter import get_model, model_ready, rebuild_model
-from .api import goals, profiles, recommendations, paths, progress, feedback, mentor, dashboard
+from .api import auth, goals, profiles, recommendations, paths, progress, feedback, mentor, dashboard
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,8 +22,30 @@ logging.basicConfig(
 logger = logging.getLogger("padhai")
 
 
+def _ensure_learner_user_id_column():
+    """SQLite lightweight migration for the Learner.user_id column."""
+    from sqlalchemy import text as sql_text
+    try:
+        with engine.connect() as conn:
+            rows = conn.execute(sql_text("PRAGMA table_info(learners)")).fetchall()
+            cols = {r[1] for r in rows}  # r[1] = name
+            if "user_id" not in cols:
+                logger.info("migrating learners table: adding user_id column")
+                conn.execute(sql_text("ALTER TABLE learners ADD COLUMN user_id VARCHAR"))
+                conn.commit()
+                # best-effort index
+                try:
+                    conn.execute(sql_text("CREATE INDEX IF NOT EXISTS ix_learners_user_id ON learners (user_id)"))
+                    conn.commit()
+                except Exception:
+                    pass
+    except Exception as e:
+        logger.warning("learner migration check failed: %s", e)
+
+
 def _startup():
     Base.metadata.create_all(bind=engine)
+    _ensure_learner_user_id_column()
     db = SessionLocal()
     try:
         seed(db)
@@ -79,6 +101,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     logger.exception("unhandled error %s %s", request.method, request.url.path)
     return JSONResponse(status_code=500, content={"detail": "Internal server error."})
 
+app.include_router(auth.router)
 app.include_router(goals.router)
 app.include_router(profiles.router)
 app.include_router(recommendations.router)

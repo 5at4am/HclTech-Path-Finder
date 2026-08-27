@@ -48,6 +48,7 @@ class Learner(Base):
     __tablename__ = "learners"
 
     id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)
     name = Column(String, default="Learner")
     goal = Column(Text, default="")
     target_role = Column(String, default="")
@@ -129,4 +130,14 @@ class Conversation(Base):
     role = Column(String, nullable=False)  # user | assistant
     message = Column(Text, default="")
     sources = Column(JSON, default=list)
+    created_at = Column(DateTime, default=lambda: __import__("datetime").datetime.now(__import__("datetime").timezone.utc))
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String, primary_key=True, default=lambda: __import__("uuid").uuid4().hex)
+    email = Column(String, nullable=False, unique=True, index=True)
+    name = Column(String, nullable=False, default="")
+    password_hash = Column(String, nullable=False)
     created_at = Column(DateTime, default=lambda: __import__("datetime").datetime.now(__import__("datetime").timezone.utc))

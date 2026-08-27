@@ -12,6 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useLearner } from "../store/useLearner";
+import { useAuth } from "../store/useAuth";
 import { cx } from "./ui";
 
 const NAV = [
@@ -87,11 +88,13 @@ function ThemeToggle() {
 
 export function AppShell() {
   const { profile, learnerId, clearLearner } = useLearner();
+  const { user, clearAuth } = useAuth();
   const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 
   const handleLogout = () => {
     clearLearner();
+    clearAuth();
     navigate("/");
   };
 
@@ -107,10 +110,10 @@ export function AppShell() {
         </div>
         <div className="border-t border-default pt-3 mt-3 flex items-center justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-primary truncate">{profile?.name ?? "Learner"}</p>
-            <p className="text-caption text-muted truncate">{profile?.target_role || "No role set"}</p>
+            <p className="text-sm font-medium text-primary truncate">{user?.name ?? profile?.name ?? "Learner"}</p>
+            <p className="text-caption text-muted truncate">{user?.email ?? profile?.target_role ?? "No role set"}</p>
           </div>
-          <button onClick={handleLogout} className="btn btn-ghost btn-icon" title="Reset learner" aria-label="Reset learner">
+          <button onClick={handleLogout} className="btn btn-ghost btn-icon" title="Sign out" aria-label="Sign out">
             <LogOut size={18} />
           </button>
         </div>

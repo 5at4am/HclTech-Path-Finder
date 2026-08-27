@@ -7,12 +7,19 @@ from ..database import get_db
 from ..schemas import MentorHistoryItem, MentorRequest, MentorResponse
 from ..models import Conversation
 from ..services.mentor_service import mentor_chat
+from ..services.profile_service import check_learner_access
+from .auth import get_current_user_optional
+from ..models import User
 
 router = APIRouter(prefix="/api/mentor", tags=["mentor"])
 
 
 @router.post("/chat", response_model=MentorResponse)
-async def chat(req: MentorRequest, db: Session = Depends(get_db)):
+async def chat(req: MentorRequest, db: Session = Depends(get_db), current_user: User | None = Depends(get_current_user_optional)):
+    try:
+        check_learner_access(db, req.learner_id, current_user)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     if not req.message or not req.message.strip():
         return MentorResponse(message="Ask me anything about your learning path.")
     r = await mentor_chat(db, req.learner_id, req.message)
@@ -22,7 +29,11 @@ async def chat(req: MentorRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/history/{learner_id}", response_model=list[MentorHistoryItem])
-def history(learner_id: str, limit: int = 50, db: Session = Depends(get_db)):
+def history(learner_id: str, limit: int = 50, db: Session = Depends(get_db), current_user: User | None = Depends(get_current_user_optional)):
+    try:
+        check_learner_access(db, learner_id, current_user)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     rows = (
         db.query(Conversation)
         .filter(Conversation.learner_id == learner_id)

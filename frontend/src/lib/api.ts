@@ -1,4 +1,5 @@
 import type {
+  AdaptResponse,
   DashboardResponse,
   Evidence,
   FeedbackResponse,
@@ -20,6 +21,11 @@ const BASE = import.meta.env.VITE_API_BASE
   ? `${String(import.meta.env.VITE_API_BASE).replace(/\/$/, "")}/api`
   : "/api";
 
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem("padhai.token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export class ApiError extends Error {
   status: number;
   detail: unknown;
@@ -33,7 +39,7 @@ export class ApiError extends Error {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(BASE + path, {
-    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...(init?.headers || {}) },
     ...init,
   });
 
@@ -73,6 +79,12 @@ export const api = {
       request<ProfileResponse>("/profile", jsonBody(data)),
     get: (learnerId: string) =>
       request<ProfileResponse>(`/profile/${encodeURIComponent(learnerId)}`),
+    listMy: () => request<ProfileResponse[]>("/profile/list/me"),
+    update: (learnerId: string, data: ProfileCreate) =>
+      request<ProfileResponse>(`/profile/${encodeURIComponent(learnerId)}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
   },
 
   dashboard: {
@@ -92,7 +104,7 @@ export const api = {
       request<PathGenerateResponse>("/paths/generate", jsonBody({ learner_id: learnerId })),
     get: (pathId: string) => request<PathOut>(`/paths/${encodeURIComponent(pathId)}`),
     adapt: (pathId: string) =>
-      request<PathGenerateResponse>(`/paths/${encodeURIComponent(pathId)}/adapt`, {
+      request<AdaptResponse>(`/paths/${encodeURIComponent(pathId)}/adapt`, {
         method: "POST",
       }),
     simulate: (learnerId: string, changes: Record<string, unknown>) =>
@@ -148,6 +160,21 @@ export const api = {
       request<MentorResponse>("/mentor/chat", jsonBody({ learner_id: learnerId, message })),
     history: (learnerId: string) =>
       request<MentorHistoryItem[]>(`/mentor/history/${encodeURIComponent(learnerId)}`),
+  },
+
+  auth: {
+    register: (name: string, email: string, password: string) =>
+      request<{ access_token: string; token_type: string; user: { id: string; email: string; name: string; created_at?: string } }>(
+        "/auth/register",
+        jsonBody({ name, email, password }),
+      ),
+    login: (email: string, password: string) =>
+      request<{ access_token: string; token_type: string; user: { id: string; email: string; name: string; created_at?: string } }>(
+        "/auth/login",
+        jsonBody({ email, password }),
+      ),
+    me: () =>
+      request<{ id: string; email: string; name: string; created_at?: string }>("/auth/me"),
   },
 };
 
